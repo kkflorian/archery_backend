@@ -1,18 +1,22 @@
 package property.abolish.archery;
-import java.util.Properties;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+
+import java.io.FileReader;
+import java.io.IOException;
 
 public class ConnectionConfig {
 
-    Properties databaseConnection = new Properties();
+    public String dbName;
+    public String dbIp;
+    public Integer dbPort;
+    public String dbUser;
+    public String dbPw;
 
-    public Properties GetConfig(){
-        databaseConnection.setProperty("database", "archery");
-        databaseConnection.setProperty("ip", "159.69.188.205");
-        databaseConnection.setProperty("port", "88");
-        databaseConnection.setProperty("dbUser", "root");
-        databaseConnection.setProperty("dbPw", "root");
-
-        return databaseConnection;
+    public static ConnectionConfig load() throws IOException {
+        try (JsonReader reader = new JsonReader(new FileReader("dev/config.json"))) {
+            return new Gson().fromJson(reader, ConnectionConfig.class);
+        }
     }
 
 }
