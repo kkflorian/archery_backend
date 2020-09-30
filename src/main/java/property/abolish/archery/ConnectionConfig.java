@@ -13,6 +13,7 @@ public class ConnectionConfig {
     public String dbUser;
     public String dbPw;
     public Integer webPort;
+    public String dbTimezone;
 
     public static ConnectionConfig load() throws IOException {
         try (JsonReader reader = new JsonReader(new FileReader("dev/config.json"))) {

@@ -3,6 +3,7 @@
   "dbIp" : "localhost",
   "dbPort" : 3306,
   "dbUser" : "root",
-  "dbPw" : "root",
-  "webPort" : 10000
+  "dbPw" : "",
+  "webPort" : 10000,
+  "dbTimezone" : "Europe/Vienna"
 }
