@@ -1,7 +1,8 @@
 {
   "dbName" : "archery",
   "dbIp" : "localhost",
-  "dbPort" : "3306",
+  "dbPort" : 3306,
   "dbUser" : "root",
-  "dbPw" : "root"
+  "dbPw" : "root",
+  "webPort" : 10000
 }
