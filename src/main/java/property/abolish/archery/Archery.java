@@ -57,6 +57,7 @@ public class Archery {
             });
 
             app.exception(Exception.class, (exception, ctx) -> {
+                exception.printStackTrace();
                 ctx.status(500);
             });
 
