@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.protobuf.Api;
 import io.javalin.apibuilder.ApiBuilder;
 import io.javalin.http.Context;
+import io.javalin.http.ExceptionHandler;
 import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJson;
 import org.jdbi.v3.core.Handle;
@@ -35,7 +36,7 @@ public class Archery {
         JavalinJson.setFromJsonMapper(gson::fromJson);
         JavalinJson.setToJsonMapper(gson::toJson);
 
-        try (Handle ignored = jdbi.open()){
+        try (Handle dbConnection = jdbi.open()){
             System.out.println("Connection successfully established!");
 
             Javalin app = Javalin.create().start("localhost", load.webPort);
@@ -53,6 +54,10 @@ public class Archery {
                         ApiBuilder.post("create", UserController::handleLogin);
                     });
                 });
+            });
+
+            app.exception(Exception.class, (exception, ctx) -> {
+                ctx.status(500);
             });
 
             // PUT /api/v1/users
@@ -84,7 +89,7 @@ public class Archery {
 
     }
 
-    private static void handleException(String message, Exception e) {
+    public static void handleException(String message, Exception e) {
         System.out.println(message);
         e.printStackTrace();
         System.exit(1);
