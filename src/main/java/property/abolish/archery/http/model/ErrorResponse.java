@@ -1,6 +1,7 @@
 package property.abolish.archery.http.model;
 
 public class ErrorResponse {
+    public String status = "error";
     public String errorCode;
     public String message;
 
