@@ -14,6 +14,7 @@ import org.jdbi.v3.core.JdbiException;
 import io.javalin.Javalin;
 import org.jetbrains.annotations.NotNull;
 import property.abolish.archery.http.controller.UserController;
+import property.abolish.archery.http.model.ErrorResponse;
 
 import java.io.IOException;
 
@@ -58,7 +59,7 @@ public class Archery {
 
             app.exception(Exception.class, (exception, ctx) -> {
                 exception.printStackTrace();
-                ctx.status(500);
+                ctx.status(500).json(new ErrorResponse("INTERNAL_SERVER_ERROR", "A internal server error has occurred"));
             });
 
             // PUT /api/v1/users
