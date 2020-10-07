@@ -2,17 +2,15 @@ package property.abolish.archery;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.protobuf.Api;
+import io.javalin.Javalin;
 import io.javalin.apibuilder.ApiBuilder;
 import io.javalin.http.Context;
-import io.javalin.http.ExceptionHandler;
-import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJson;
 import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.Handles;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.JdbiException;
-import io.javalin.Javalin;
-import org.jetbrains.annotations.NotNull;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.ErrorResponse;
 
@@ -32,6 +30,8 @@ public class Archery {
         }
 
         jdbi = Jdbi.create(String.format("jdbc:mysql://%s:%d/%s?serverTimezone=%s", load.dbIp, load.dbPort, load.dbName, load.dbTimezone), load.dbUser, load.dbPw);
+        jdbi.installPlugin(new SqlObjectPlugin());
+        jdbi.getConfig(Handles.class).setForceEndTransactions(false);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JavalinJson.setFromJsonMapper(gson::fromJson);
@@ -46,7 +46,7 @@ public class Archery {
                 ApiBuilder.path("api/v1", () -> {
                     ApiBuilder.path("users", () -> {
                         ApiBuilder.get("login", UserController::handleLogin);
-                        ApiBuilder.post(UserController::handleRegister);
+                        ApiBuilder.put(UserController::handleRegister);
                     });
 
                     ApiBuilder.path("events", () -> {
@@ -58,6 +58,7 @@ public class Archery {
             });
 
             app.exception(Exception.class, (exception, ctx) -> {
+                System.out.println("mamamia");
                 exception.printStackTrace();
                 ctx.status(500).json(new ErrorResponse("INTERNAL_SERVER_ERROR", "A internal server error has occurred"));
             });
@@ -99,5 +100,15 @@ public class Archery {
 
     public static Jdbi getJdbi() {
         return jdbi;
+    }
+
+    public static Handle getConnection() {
+        Handle connection = getJdbi().open();
+        try {
+            connection.getConnection().setAutoCommit(false);
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+        return connection;
     }
 }
