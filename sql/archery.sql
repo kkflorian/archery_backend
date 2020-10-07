@@ -148,8 +148,8 @@ CREATE TABLE IF NOT EXISTS `archery`.`userSession` (
   CONSTRAINT `userSession_user`
     FOREIGN KEY (`userId`)
     REFERENCES `archery`.`user` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 CREATE INDEX `userSession_user_idx` ON `archery`.`userSession` (`userId` ASC) ;

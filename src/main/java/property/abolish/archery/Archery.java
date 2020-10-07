@@ -16,20 +16,22 @@ import property.abolish.archery.http.model.ErrorResponse;
 
 import java.io.IOException;
 
+import static property.abolish.archery.utilities.General.handleException;
+
 public class Archery {
     private static Jdbi jdbi;
+    private static Config config;
 
     public static void main(String[] args) {
-        ConnectionConfig load;
 
         try {
-            load = ConnectionConfig.load();
+            config = Config.load();
         } catch (IOException e) {
             handleException("Config couldn't be loaded", e);
             return;
         }
 
-        jdbi = Jdbi.create(String.format("jdbc:mysql://%s:%d/%s?serverTimezone=%s", load.dbIp, load.dbPort, load.dbName, load.dbTimezone), load.dbUser, load.dbPw);
+        jdbi = Jdbi.create(String.format("jdbc:mysql://%s:%d/%s?serverTimezone=%s", config.dbIp, config.dbPort, config.dbName, config.dbTimezone), config.dbUser, config.dbPw);
         jdbi.installPlugin(new SqlObjectPlugin());
         jdbi.getConfig(Handles.class).setForceEndTransactions(false);
 
@@ -40,7 +42,7 @@ public class Archery {
         try (Handle dbConnection = jdbi.open()){
             System.out.println("Connection successfully established!");
 
-            Javalin app = Javalin.create().start("localhost", load.webPort);
+            Javalin app = Javalin.create().start("localhost", config.webPort);
 
             app.routes(() -> {
                 ApiBuilder.path("api/v1", () -> {
@@ -58,7 +60,6 @@ public class Archery {
             });
 
             app.exception(Exception.class, (exception, ctx) -> {
-                System.out.println("mamamia");
                 exception.printStackTrace();
                 ctx.status(500).json(new ErrorResponse("INTERNAL_SERVER_ERROR", "A internal server error has occurred"));
             });
@@ -81,25 +82,18 @@ public class Archery {
 });
              */
 
-            app.post("/api/v1/user/login", Archery::handleLogin);
         } catch (JdbiException e) {
             handleException("Connection couldn't be established", e);
             return;
         }
     }
 
-    private static void handleLogin(Context ctx) throws Exception {
-
-    }
-
-    public static void handleException(String message, Exception e) {
-        System.out.println(message);
-        e.printStackTrace();
-        System.exit(1);
-    }
-
     public static Jdbi getJdbi() {
         return jdbi;
+    }
+
+    public static Config getConfig() {
+        return config;
     }
 
     public static Handle getConnection() {

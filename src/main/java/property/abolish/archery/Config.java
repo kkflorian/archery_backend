@@ -5,7 +5,7 @@ import com.google.gson.stream.JsonReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class ConnectionConfig {
+public class Config {
 
     public String dbName;
     public String dbIp;
@@ -14,10 +14,11 @@ public class ConnectionConfig {
     public String dbPw;
     public Integer webPort;
     public String dbTimezone;
+    public boolean allowInsecureCookies;
 
-    public static ConnectionConfig load() throws IOException {
+    public static Config load() throws IOException {
         try (JsonReader reader = new JsonReader(new FileReader("dev/config.json"))) {
-            return new Gson().fromJson(reader, ConnectionConfig.class);
+            return new Gson().fromJson(reader, Config.class);
         }
     }
 
