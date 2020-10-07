@@ -12,6 +12,11 @@ import property.abolish.archery.http.model.RegisterRequest;
 import property.abolish.archery.http.model.SuccessResponse;
 import property.abolish.archery.utilities.Validation;
 
+import javax.servlet.http.Cookie;
+
+import java.security.SecureRandom;
+import java.time.Instant;
+
 import static com.kosprov.jargon2.api.Jargon2.jargon2Hasher;
 
 public class UserController {
@@ -50,14 +55,43 @@ public class UserController {
             user.setLastName(req.lastName);
             user.setPasswordHash(encodeHash(req.password));
 
-            userQuery.insertUser(user);
+            int userId = userQuery.insertUser(user);
+
+            String sessionId = createRandomAlphanumeric(32);
+
+
 
             dbConnection.commit();
+
+
+
+
+
+
+            Cookie cook = new Cookie("Session", sessionId);
+            cook.setMaxAge(60*60*24);
+            cook.setSecure(true);
+            cook.setHttpOnly(true);
+            ctx.cookie(cook);
         }
 
         ctx.json(new SuccessResponse());
 
         //todo Session cookie
+    }
+
+    public static String createRandomAlphanumeric(int length) {
+        String symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+        SecureRandom rand = new SecureRandom();
+        StringBuilder sessionId = new StringBuilder();
+
+        for (int i = 0; i < length; i++){
+            int num = rand.nextInt(symbols.length());
+            sessionId.append(symbols.charAt(num));
+        }
+
+        return sessionId.toString();
     }
 
     private static String encodeHash(String password) {
