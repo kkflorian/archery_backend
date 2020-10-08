@@ -9,7 +9,7 @@ import property.abolish.archery.db.model.User;
 
 public interface UserQuery {
 
-    @SqlQuery("SELECT * FROM user WHERE username = :username")
+    @SqlQuery("SELECT * FROM user WHERE UPPER(username) = UPPER(:username)")
     @RegisterBeanMapper(User.class)
     User getUserByUsername(String username);
 

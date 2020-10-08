@@ -14,6 +14,7 @@ import property.abolish.archery.http.model.ErrorResponse;
 import property.abolish.archery.http.model.LoginRequest;
 import property.abolish.archery.http.model.RegisterRequest;
 import property.abolish.archery.http.model.SuccessResponse;
+import property.abolish.archery.utilities.General;
 import property.abolish.archery.utilities.Validation;
 
 import javax.servlet.http.Cookie;
@@ -38,6 +39,7 @@ public class UserController {
                 .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty");
         if (validator.hasError()) {
             Validation.handleValidationError(ctx, validator);
+            return;
         }
 
         LoginRequest req = validator.get();
@@ -47,26 +49,38 @@ public class UserController {
             User user = userQuery.getUserByUsername(req.username);
 
             if (user == null) {
-                ctx.status(409).json(new ErrorResponse("USER_DOES_NOT_EXIST", "Es existiert kein Benutzer unter diesem Nutzernamen"));
+                ctx.status(404).json(new ErrorResponse("USER_DOES_NOT_EXIST", "Es existiert kein Benutzer unter diesem Nutzernamen"));
                 return;
             }
 
             if (!isPasswordCorrect(req.password, user.getPasswordHash())){
-                ctx.status(409).json(new ErrorResponse("WRONG_PASSWORD", "Das Passwort ist falsch"));
+                ctx.status(401).json(new ErrorResponse("WRONG_PASSWORD", "Das Passwort ist falsch"));
                 return;
             }
 
             String sessionId = ctx.cookie("Session");
 
             if (sessionId == null || sessionId.isEmpty()){
-                // TODO create new session
+                createSession(dbConnection.attach(UserSessionQuery.class), user.getId(), ctx);
+                dbConnection.commit();
+                ctx.json(new SuccessResponse());
+                return;
             }
 
-            if (sessionId != null && !sessionId.isEmpty()){
-                // TODO check for valid session
+            // Check if sessionId is valid
+            UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
+            UserSession userSession = userSessionQuery.getUserSessionBySessionId(sessionId);
+
+            if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())){
+                // Create new session
+                createSession(userSessionQuery, user.getId(), ctx);
+                dbConnection.commit();
+                ctx.json(new SuccessResponse());
+                return;
             }
 
-            ctx.json(new SuccessResponse());
+            // Session is valid -> User is already logged in
+            ctx.status(409).json(new ErrorResponse("ALREADY_LOGGED_IN", "Der User ist bereits angemeldet"));
         }
 
     }
@@ -103,27 +117,24 @@ public class UserController {
             int userId = userQuery.insertUser(user);
 
             // Create session
-            String sessionId = createSession(dbConnection, userId);
+            createSession(dbConnection.attach(UserSessionQuery.class), userId, ctx);
 
             dbConnection.commit();
-
-            ctx.cookie(getSessionCookie(sessionId));
         }
 
         ctx.json(new SuccessResponse());
     }
 
-    @NotNull
-    private static String createSession(Handle dbConnection, int userId) {
+    private static void createSession(UserSessionQuery userSessionQuery, int userId, Context ctx) {
         String sessionId = createRandomAlphanumeric(32);
         UserSession userSession = new UserSession();
         userSession.setSessionId(sessionId);
         userSession.setUserId(userId);
         userSession.setExpiryDate(Instant.now().plusSeconds(SESSION_MAX_AGE));
 
-        UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
         userSessionQuery.insertUserSession(userSession);
-        return sessionId;
+
+        ctx.cookie(getSessionCookie(sessionId));
     }
 
     @NotNull

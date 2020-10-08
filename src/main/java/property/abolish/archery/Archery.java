@@ -47,7 +47,7 @@ public class Archery {
             app.routes(() -> {
                 ApiBuilder.path("api/v1", () -> {
                     ApiBuilder.path("users", () -> {
-                        ApiBuilder.get("login", UserController::handleLogin);
+                        ApiBuilder.post("login", UserController::handleLogin);
                         ApiBuilder.put(UserController::handleRegister);
                     });
 
