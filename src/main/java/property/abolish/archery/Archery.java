@@ -5,12 +5,14 @@ import com.google.gson.GsonBuilder;
 import io.javalin.Javalin;
 import io.javalin.apibuilder.ApiBuilder;
 import io.javalin.http.Context;
+import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJson;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Handles;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.JdbiException;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
+import org.jetbrains.annotations.NotNull;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.ErrorResponse;
 
@@ -42,9 +44,18 @@ public class Archery {
         try (Handle dbConnection = jdbi.open()){
             System.out.println("Connection successfully established!");
 
-            Javalin app = Javalin.create().start("localhost", config.webPort);
+            Javalin httpServer = Javalin.create().start("localhost", config.webPort);
+            httpServer.before((ctx) -> {
+                ctx.header("content-type" ,"application/json");
 
-            app.routes(() -> {
+                if (config.devModeURL != null) {
+                    ctx.header("Access-Control-Allow-Credentials", "true");
+                    ctx.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH");
+                    ctx.header("Access-Control-Allow-Origin", config.devModeURL);
+                }
+            });
+
+            httpServer.routes(() -> {
                 ApiBuilder.path("api/v1", () -> {
                     ApiBuilder.path("users", () -> {
                         ApiBuilder.post("login", UserController::handleLogin);
@@ -59,7 +70,7 @@ public class Archery {
                 });
             });
 
-            app.exception(Exception.class, (exception, ctx) -> {
+            httpServer.exception(Exception.class, (exception, ctx) -> {
                 exception.printStackTrace();
                 ctx.status(500).json(new ErrorResponse("INTERNAL_SERVER_ERROR", "A internal server error has occurred"));
             });

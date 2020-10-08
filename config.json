@@ -6,5 +6,6 @@
   "dbPw" : "",
   "webPort" : 10000,
   "dbTimezone" : "Europe/Vienna",
-  "allowInsecureCookies" : true
+  "allowInsecureCookies" : true,
+  "devModeURL" : null
 }

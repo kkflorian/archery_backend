@@ -15,9 +15,10 @@ public class Config {
     public Integer webPort;
     public String dbTimezone;
     public boolean allowInsecureCookies;
+    public String devModeURL;
 
     public static Config load() throws IOException {
-        try (JsonReader reader = new JsonReader(new FileReader("dev/config.json"))) {
+        try (JsonReader reader = new JsonReader(new FileReader("config.json"))) {
             return new Gson().fromJson(reader, Config.class);
         }
     }
