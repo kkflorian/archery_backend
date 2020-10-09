@@ -126,6 +126,22 @@ public class UserController {
         ctx.json(new SuccessResponse());
     }
 
+    public static void handleGetUser(Context ctx) {
+        UserSession userSession = ctx.use(UserSession.class);
+
+        Handle dbConnection = Archery.getConnection();
+        UserQuery userQuery = dbConnection.attach(UserQuery.class);
+
+        User user = userQuery.getUserByUserId(userSession.getUserId());
+
+        if (user == null || user.getUsername().isEmpty()){
+            ctx.status(404).json(new ErrorResponse("USER_NOT_FOUND", "This user does not exist"));
+            return;
+        }
+
+        ctx.json(user.getUsername()).json(new SuccessResponse());
+    }
+
     private static void createSession(UserSessionQuery userSessionQuery, int userId, Context ctx) {
         String sessionId = createRandomAlphanumeric(32);
         UserSession userSession = new UserSession();
@@ -168,4 +184,6 @@ public class UserController {
 
         return verifier.hash(hash).password(password.getBytes()).verifyEncoded();
     }
+
+
 }

@@ -16,4 +16,8 @@ public interface UserQuery {
     @SqlUpdate("INSERT INTO user (username, firstName, lastName, passwordHash) VALUES (:username, :firstName, :lastName, :passwordHash)")
     @GetGeneratedKeys
     int insertUser(@BindBean User user);
+
+    @SqlQuery("SELECT * FROM user WHERE id = :userId")
+    @RegisterBeanMapper(User.class)
+    User getUserByUserId(int userId);
 }

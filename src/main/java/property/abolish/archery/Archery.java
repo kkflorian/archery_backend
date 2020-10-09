@@ -80,6 +80,7 @@ public class Archery {
                     ApiBuilder.path("users", () -> {
                         ApiBuilder.post("login", UserController::handleLogin, roles(MyRole.ANYONE));
                         ApiBuilder.put(UserController::handleRegister, roles(MyRole.ANYONE));
+                        ApiBuilder.get(UserController::handleGetUser, roles(MyRole.LOGGED_IN));
                     });
 
                     ApiBuilder.path("events", () -> {
@@ -153,6 +154,7 @@ public class Archery {
         if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())){
             return MyRole.ANYONE;
         }
+
         ctx.register(UserSession.class, userSession);
         return MyRole.LOGGED_IN;
     }
