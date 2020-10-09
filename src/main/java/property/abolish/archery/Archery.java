@@ -55,6 +55,7 @@ public class Archery {
             System.out.println("Connection successfully established!");
 
             Javalin httpServer = Javalin.create(config -> {
+                config.enableCorsForOrigin(Archery.config.devModeURL);
                 config.accessManager((handler, ctx, permittedRoles) -> {
                    MyRole userRole = getUserRole(ctx);
 
@@ -65,15 +66,6 @@ public class Archery {
                     }
                 });
             }).start("localhost", config.webPort);
-            httpServer.before((ctx) -> {
-                ctx.header("content-type" ,"application/json");
-
-                if (config.devModeURL != null) {
-                    ctx.header("Access-Control-Allow-Credentials", "true");
-                    ctx.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH");
-                    ctx.header("Access-Control-Allow-Origin", config.devModeURL);
-                }
-            });
 
             httpServer.routes(() -> {
                 ApiBuilder.path("api/v1", () -> {
@@ -81,6 +73,7 @@ public class Archery {
                         ApiBuilder.post("login", UserController::handleLogin, roles(MyRole.ANYONE));
                         ApiBuilder.put(UserController::handleRegister, roles(MyRole.ANYONE));
                         ApiBuilder.get(UserController::handleGetUser, roles(MyRole.LOGGED_IN));
+                        ApiBuilder.post("signoff", UserController::handleSignOff, roles(MyRole.LOGGED_IN));
                     });
 
                     ApiBuilder.path("events", () -> {

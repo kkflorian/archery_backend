@@ -142,6 +142,15 @@ public class UserController {
         ctx.json(user.getUsername()).json(new SuccessResponse());
     }
 
+    public static void handleSignOff(Context ctx) {
+        UserSession userSession = ctx.use(UserSession.class);
+        Handle dbConnection = Archery.getConnection();
+        UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
+
+        userSessionQuery.invalidateUserSession(userSession.getSessionId());
+        ctx.removeCookie("Session").json(new SuccessResponse());
+    }
+
     private static void createSession(UserSessionQuery userSessionQuery, int userId, Context ctx) {
         String sessionId = createRandomAlphanumeric(32);
         UserSession userSession = new UserSession();
@@ -184,6 +193,5 @@ public class UserController {
 
         return verifier.hash(hash).password(password.getBytes()).verifyEncoded();
     }
-
 
 }

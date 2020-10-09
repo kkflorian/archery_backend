@@ -13,5 +13,8 @@ public interface UserSessionQuery {
     UserSession getUserSessionBySessionId(String sessionId);
 
     @SqlUpdate("INSERT INTO userSession (sessionId, userId, expiryDate) VALUES (:sessionId, :userId, :expiryDate)")
-    int insertUserSession(@BindBean UserSession userSession);
+    void insertUserSession(@BindBean UserSession userSession);
+
+    @SqlUpdate("UPDATE userSession SET expiryDate = now() WHERE sessionId = :sessionId")
+    void invalidateUserSession(String sessionId);
 }
