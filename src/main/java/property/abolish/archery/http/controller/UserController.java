@@ -33,6 +33,7 @@ public class UserController {
     private static final int PARALLELISM = 1;
     private static final int SALT_LENGTH = 16;
     private static final int HASH_LENGTH = 32;
+    public static final String COOKIE_NAME_SESSION = "Session";
 
     public static void handleLogin(Context ctx) {
         Validator<LoginRequest> validator = ctx.bodyValidator(LoginRequest.class)
@@ -59,7 +60,7 @@ public class UserController {
                 return;
             }
 
-            String sessionId = ctx.cookie("Session");
+            String sessionId = ctx.cookie(COOKIE_NAME_SESSION);
 
             if (sessionId == null || sessionId.isEmpty()){
                 createSession(dbConnection.attach(UserSessionQuery.class), user.getId(), ctx);
@@ -148,7 +149,7 @@ public class UserController {
         UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
 
         userSessionQuery.invalidateUserSession(userSession.getSessionId());
-        ctx.removeCookie("Session").json(new SuccessResponse());
+        ctx.removeCookie(COOKIE_NAME_SESSION).json(new SuccessResponse());
     }
 
     private static void createSession(UserSessionQuery userSessionQuery, int userId, Context ctx) {
@@ -165,7 +166,7 @@ public class UserController {
 
     @NotNull
     private static Cookie getSessionCookie(String sessionId) {
-        Cookie cookie = new Cookie("Session", sessionId);
+        Cookie cookie = new Cookie(COOKIE_NAME_SESSION, sessionId);
         cookie.setMaxAge(SESSION_MAX_AGE);
         cookie.setSecure(!Archery.getConfig().allowInsecureCookies);
         cookie.setHttpOnly(true);
