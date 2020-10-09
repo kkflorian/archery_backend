@@ -1,6 +1,7 @@
 package property.abolish.archery.http.controller;
 
 import com.kosprov.jargon2.api.Jargon2;
+import io.javalin.core.security.Role;
 import io.javalin.core.validation.Validator;
 import io.javalin.http.Context;
 import org.jdbi.v3.core.Handle;

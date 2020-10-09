@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.javalin.Javalin;
 import io.javalin.apibuilder.ApiBuilder;
+import io.javalin.core.security.Role;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJson;
@@ -13,16 +14,25 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.JdbiException;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.jetbrains.annotations.NotNull;
+import property.abolish.archery.db.model.UserSession;
+import property.abolish.archery.db.query.UserSessionQuery;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.ErrorResponse;
+import property.abolish.archery.http.model.SuccessResponse;
 
 import java.io.IOException;
+import java.time.Instant;
 
+import static io.javalin.core.security.SecurityUtil.roles;
 import static property.abolish.archery.utilities.General.handleException;
 
 public class Archery {
     private static Jdbi jdbi;
     private static Config config;
+
+    public enum MyRole implements Role {
+        ANYONE, LOGGED_IN;
+    }
 
     public static void main(String[] args) {
 
@@ -44,7 +54,17 @@ public class Archery {
         try (Handle dbConnection = jdbi.open()){
             System.out.println("Connection successfully established!");
 
-            Javalin httpServer = Javalin.create().start("localhost", config.webPort);
+            Javalin httpServer = Javalin.create(config -> {
+                config.accessManager((handler, ctx, permittedRoles) -> {
+                   MyRole userRole = getUserRole(ctx);
+
+                    if (permittedRoles.contains(userRole)) {
+                        handler.handle(ctx);
+                    } else {
+                        ctx.status(401).json(new ErrorResponse("UNAUTHORIZED_USER", "User is not authorized for this action"));
+                    }
+                });
+            }).start("localhost", config.webPort);
             httpServer.before((ctx) -> {
                 ctx.header("content-type" ,"application/json");
 
@@ -58,8 +78,8 @@ public class Archery {
             httpServer.routes(() -> {
                 ApiBuilder.path("api/v1", () -> {
                     ApiBuilder.path("users", () -> {
-                        ApiBuilder.post("login", UserController::handleLogin);
-                        ApiBuilder.put(UserController::handleRegister);
+                        ApiBuilder.post("login", UserController::handleLogin, roles(MyRole.ANYONE));
+                        ApiBuilder.put(UserController::handleRegister, roles(MyRole.ANYONE));
                     });
 
                     ApiBuilder.path("events", () -> {
@@ -115,5 +135,25 @@ public class Archery {
             throw new RuntimeException(e);
         }
         return connection;
+    }
+
+    private static MyRole getUserRole(Context ctx) {
+        String sessionId = ctx.cookie("Session");
+
+        if (sessionId == null || sessionId.isEmpty()){
+            return MyRole.ANYONE;
+        }
+
+        Handle dbConnection = getConnection();
+
+        // Check if sessionId is valid
+        UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
+        UserSession userSession = userSessionQuery.getUserSessionBySessionId(sessionId);
+
+        if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())){
+            return MyRole.ANYONE;
+        }
+        ctx.register(UserSession.class, userSession);
+        return MyRole.LOGGED_IN;
     }
 }
