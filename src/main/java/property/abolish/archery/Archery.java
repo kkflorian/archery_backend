@@ -6,19 +6,16 @@ import io.javalin.Javalin;
 import io.javalin.apibuilder.ApiBuilder;
 import io.javalin.core.security.Role;
 import io.javalin.http.Context;
-import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJson;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Handles;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.JdbiException;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
-import org.jetbrains.annotations.NotNull;
 import property.abolish.archery.db.model.UserSession;
 import property.abolish.archery.db.query.UserSessionQuery;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.ErrorResponse;
-import property.abolish.archery.http.model.SuccessResponse;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -57,7 +54,12 @@ public class Archery {
             Javalin httpServer = Javalin.create(config -> {
                 config.enableCorsForOrigin(Archery.config.devModeURL);
                 config.accessManager((handler, ctx, permittedRoles) -> {
-                   MyRole userRole = getUserRole(ctx);
+                    if (ctx.method().equals("OPTIONS")) {
+                        handler.handle(ctx);
+                        return;
+                    }
+
+                    MyRole userRole = getUserRole(ctx);
 
                     if (permittedRoles.contains(userRole)) {
                         handler.handle(ctx);
