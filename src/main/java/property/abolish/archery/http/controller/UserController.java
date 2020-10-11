@@ -128,12 +128,7 @@ public class UserController {
     }
 
     public static void handleGetUser(Context ctx) {
-        UserSession userSession = ctx.use(UserSession.class);
-
-        Handle dbConnection = Archery.getConnection();
-        UserQuery userQuery = dbConnection.attach(UserQuery.class);
-
-        User user = userQuery.getUserByUserId(userSession.getUserId());
+        User user = ctx.use(User.class);
 
         if (user == null || user.getUsername().isEmpty()){
             ctx.status(404).json(new ErrorResponse("USER_NOT_FOUND", "This user does not exist"));

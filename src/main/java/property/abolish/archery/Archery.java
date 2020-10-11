@@ -14,8 +14,11 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.JdbiException;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.jetbrains.annotations.NotNull;
+import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.model.UserSession;
+import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
+import property.abolish.archery.http.controller.EventController;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.ErrorResponse;
 import property.abolish.archery.http.model.SuccessResponse;
@@ -77,7 +80,7 @@ public class Archery {
                     });
 
                     ApiBuilder.path("events", () -> {
-                        ApiBuilder.put(UserController::handleLogin);
+                        ApiBuilder.get(EventController::handleGetEventList, roles(MyRole.LOGGED_IN));
 
                         ApiBuilder.post("create", UserController::handleLogin);
                     });
@@ -149,6 +152,10 @@ public class Archery {
         }
 
         ctx.register(UserSession.class, userSession);
+        UserQuery userQuery = dbConnection.attach(UserQuery.class);
+        User user = userQuery.getUserByUserId(userSession.getUserId());
+        ctx.register(User.class, user);
+
         return MyRole.LOGGED_IN;
     }
 }
