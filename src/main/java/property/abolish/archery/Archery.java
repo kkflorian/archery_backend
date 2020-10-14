@@ -19,6 +19,7 @@ import property.abolish.archery.db.model.UserSession;
 import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
 import property.abolish.archery.http.controller.EventController;
+import property.abolish.archery.http.controller.ParkourController;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.ErrorResponse;
 import property.abolish.archery.http.model.SuccessResponse;
@@ -54,13 +55,13 @@ public class Archery {
         JavalinJson.setFromJsonMapper(gson::fromJson);
         JavalinJson.setToJsonMapper(gson::toJson);
 
-        try (Handle dbConnection = jdbi.open()){
+        try (Handle dbConnection = getConnection()) {
             System.out.println("Connection successfully established!");
 
             Javalin httpServer = Javalin.create(config -> {
                 config.enableCorsForOrigin(Archery.config.devModeURL);
                 config.accessManager((handler, ctx, permittedRoles) -> {
-                   MyRole userRole = getUserRole(ctx);
+                    MyRole userRole = getUserRole(ctx);
 
                     if (permittedRoles.contains(userRole)) {
                         handler.handle(ctx);
@@ -73,16 +74,19 @@ public class Archery {
             httpServer.routes(() -> {
                 ApiBuilder.path("api/v1", () -> {
                     ApiBuilder.path("users", () -> {
-                        ApiBuilder.post("login", UserController::handleLogin, roles(MyRole.ANYONE));
-                        ApiBuilder.put(UserController::handleRegister, roles(MyRole.ANYONE));
+                        ApiBuilder.post("login", UserController::handleLogin, roles(MyRole.ANYONE, MyRole.LOGGED_IN));
+                        ApiBuilder.put(UserController::handleRegister, roles(MyRole.ANYONE, MyRole.LOGGED_IN));
                         ApiBuilder.get(UserController::handleGetUser, roles(MyRole.LOGGED_IN));
                         ApiBuilder.post("signoff", UserController::handleSignOff, roles(MyRole.LOGGED_IN));
                     });
 
                     ApiBuilder.path("events", () -> {
                         ApiBuilder.get(EventController::handleGetEventList, roles(MyRole.LOGGED_IN));
+                        ApiBuilder.put(EventController::handleCreateEvent, roles(MyRole.LOGGED_IN));
+                    });
 
-                        ApiBuilder.post("create", UserController::handleLogin);
+                    ApiBuilder.path("parkours", () -> {
+                        ApiBuilder.put(ParkourController::handleCreateParkour, roles(MyRole.LOGGED_IN));
                     });
                 });
             });
@@ -128,7 +132,7 @@ public class Archery {
         Handle connection = getJdbi().open();
         try {
             connection.getConnection().setAutoCommit(false);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return connection;
@@ -137,27 +141,26 @@ public class Archery {
     private static MyRole getUserRole(Context ctx) {
         String sessionId = ctx.cookie("Session");
 
-        if (sessionId == null || sessionId.isEmpty()){
+        if (sessionId == null || sessionId.isEmpty()) {
             return MyRole.ANYONE;
         }
 
-        Handle dbConnection = getConnection();
+        try (Handle dbConnection = getConnection()) {
 
-        // Check if sessionId is valid
-        UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
-        UserSession userSession = userSessionQuery.getUserSessionBySessionId(sessionId);
+            // Check if sessionId is valid
+            UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
+            UserSession userSession = userSessionQuery.getUserSessionBySessionId(sessionId);
 
-        if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())){
-            dbConnection.close();
-            return MyRole.ANYONE;
+            if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())) {
+                return MyRole.ANYONE;
+            }
+
+            ctx.register(UserSession.class, userSession);
+            UserQuery userQuery = dbConnection.attach(UserQuery.class);
+            User user = userQuery.getUserByUserId(userSession.getUserId());
+            ctx.register(User.class, user);
+
+            return MyRole.LOGGED_IN;
         }
-
-        ctx.register(UserSession.class, userSession);
-        UserQuery userQuery = dbConnection.attach(UserQuery.class);
-        User user = userQuery.getUserByUserId(userSession.getUserId());
-        ctx.register(User.class, user);
-
-        dbConnection.close();
-        return MyRole.LOGGED_IN;
     }
 }
