@@ -1,7 +1,6 @@
 package property.abolish.archery.http.controller;
 
 import com.kosprov.jargon2.api.Jargon2;
-import io.javalin.core.security.Role;
 import io.javalin.core.validation.Validator;
 import io.javalin.http.Context;
 import org.jdbi.v3.core.Handle;
@@ -15,7 +14,6 @@ import property.abolish.archery.http.model.ErrorResponse;
 import property.abolish.archery.http.model.LoginRequest;
 import property.abolish.archery.http.model.RegisterRequest;
 import property.abolish.archery.http.model.SuccessResponse;
-import property.abolish.archery.utilities.General;
 import property.abolish.archery.utilities.Validation;
 
 import javax.servlet.http.Cookie;
@@ -27,7 +25,7 @@ import static property.abolish.archery.utilities.General.createRandomAlphanumeri
 
 public class UserController {
 
-    private static final int SESSION_MAX_AGE = 60*60*24;
+    private static final int SESSION_MAX_AGE = 60 * 60 * 24;
     private static final int MEMORY_COST = 65536;
     private static final int TIME_COST = 1;
     private static final int PARALLELISM = 1;
@@ -55,14 +53,14 @@ public class UserController {
                 return;
             }
 
-            if (!isPasswordCorrect(req.password, user.getPasswordHash())){
+            if (!isPasswordCorrect(req.password, user.getPasswordHash())) {
                 ctx.status(401).json(new ErrorResponse("WRONG_PASSWORD", "Das Passwort ist falsch"));
                 return;
             }
 
             String sessionId = ctx.cookie(COOKIE_NAME_SESSION);
 
-            if (sessionId == null || sessionId.isEmpty()){
+            if (Validation.isNullOrEmpty(sessionId)) {
                 createSession(dbConnection.attach(UserSessionQuery.class), user.getId(), ctx);
                 dbConnection.commit();
                 ctx.json(new SuccessResponse());
@@ -73,7 +71,7 @@ public class UserController {
             UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
             UserSession userSession = userSessionQuery.getUserSessionBySessionId(sessionId);
 
-            if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())){
+            if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())) {
                 // Create new session
                 createSession(userSessionQuery, user.getId(), ctx);
                 dbConnection.commit();
@@ -84,7 +82,6 @@ public class UserController {
             // Session is valid -> User is already logged in
             ctx.status(409).json(new ErrorResponse("ALREADY_LOGGED_IN", "Der User ist bereits angemeldet"));
         }
-
     }
 
     public static void handleRegister(Context ctx) {
@@ -99,13 +96,12 @@ public class UserController {
         }
 
         RegisterRequest req = validator.get();
-
         try (Handle dbConnection = Archery.getConnection()) {
             // Check if user with this username already exists
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
             User user = userQuery.getUserByUsername(req.username);
 
-            if (user != null){
+            if (user != null) {
                 ctx.status(409).json(new ErrorResponse("USER_ALREADY_EXISTS", "Dieser Benutzer existiert bereits"));
                 return;
             }
@@ -122,20 +118,14 @@ public class UserController {
             createSession(dbConnection.attach(UserSessionQuery.class), userId, ctx);
 
             dbConnection.commit();
+            ctx.json(new SuccessResponse());
         }
-
-        ctx.json(new SuccessResponse());
     }
 
     public static void handleGetUser(Context ctx) {
-        UserSession userSession = ctx.use(UserSession.class);
+        User user = ctx.use(User.class);
 
-        Handle dbConnection = Archery.getConnection();
-        UserQuery userQuery = dbConnection.attach(UserQuery.class);
-
-        User user = userQuery.getUserByUserId(userSession.getUserId());
-
-        if (user == null || user.getUsername().isEmpty()){
+        if (user == null || user.getUsername().isEmpty()) {
             ctx.status(404).json(new ErrorResponse("USER_NOT_FOUND", "This user does not exist"));
             return;
         }
@@ -145,11 +135,11 @@ public class UserController {
 
     public static void handleSignOff(Context ctx) {
         UserSession userSession = ctx.use(UserSession.class);
-        Handle dbConnection = Archery.getConnection();
-        UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
-
-        userSessionQuery.invalidateUserSession(userSession.getSessionId());
-        ctx.removeCookie(COOKIE_NAME_SESSION).json(new SuccessResponse());
+        try (Handle dbConnection = Archery.getConnection()) {
+            UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
+            userSessionQuery.invalidateUserSession(userSession.getSessionId());
+            ctx.removeCookie(COOKIE_NAME_SESSION).json(new SuccessResponse());
+        }
     }
 
     private static void createSession(UserSessionQuery userSessionQuery, int userId, Context ctx) {
@@ -185,7 +175,7 @@ public class UserController {
         return hasher.password(password.getBytes()).encodedHash();
     }
 
-    private static boolean isPasswordCorrect(String password, String hash){
+    private static boolean isPasswordCorrect(String password, String hash) {
         Jargon2.Verifier verifier = jargon2Verifier()
                 .type(Jargon2.Type.ARGON2id)
                 .memoryCost(MEMORY_COST)

@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS `event` (
     FOREIGN KEY (`userIdCreator`)
     REFERENCES `user` (`id`)
     ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `event_gamemode`
+    FOREIGN KEY (`gamemodeId`)
+    REFERENCES `gamemode` (id)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
@@ -134,3 +139,18 @@ CREATE TABLE IF NOT EXISTS `userSession` (
 ENGINE = InnoDB;
 
 CREATE INDEX `userSession_user_idx` ON `userSession` (`userId` ASC) ;
+
+-- -----------------------------------------------------
+-- Table `gamemode`
+-- -----------------------------------------------------
+
+create table if not exists gamemode
+(
+    id int auto_increment,
+    gamemode varchar(45) not null,
+    constraint gamemode_pk
+        primary key (id)
+);
+
+create unique index gamemode_gamemode_uindex
+    on gamemode (gamemode);
