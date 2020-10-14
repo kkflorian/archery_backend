@@ -21,6 +21,7 @@ public class EventController {
 
         if (eventList == null){
             ctx.status(418).json(new ErrorResponse("NO_EVENTS_FOUND", "No previous events found"));
+            dbConnection.close();
             return;
         }
 

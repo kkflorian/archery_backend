@@ -62,7 +62,7 @@ public class UserController {
 
             String sessionId = ctx.cookie(COOKIE_NAME_SESSION);
 
-            if (sessionId == null || sessionId.isEmpty()){
+            if (Validation.isNullOrEmpty(sessionId)){
                 createSession(dbConnection.attach(UserSessionQuery.class), user.getId(), ctx);
                 dbConnection.commit();
                 ctx.json(new SuccessResponse());
@@ -142,7 +142,7 @@ public class UserController {
         UserSession userSession = ctx.use(UserSession.class);
         Handle dbConnection = Archery.getConnection();
         UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
-
+        dbConnection.close();
         userSessionQuery.invalidateUserSession(userSession.getSessionId());
         ctx.removeCookie(COOKIE_NAME_SESSION).json(new SuccessResponse());
     }

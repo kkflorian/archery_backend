@@ -148,6 +148,7 @@ public class Archery {
         UserSession userSession = userSessionQuery.getUserSessionBySessionId(sessionId);
 
         if (userSession == null || userSession.getExpiryDate().isBefore(Instant.now())){
+            dbConnection.close();
             return MyRole.ANYONE;
         }
 
@@ -156,6 +157,7 @@ public class Archery {
         User user = userQuery.getUserByUserId(userSession.getUserId());
         ctx.register(User.class, user);
 
+        dbConnection.close();
         return MyRole.LOGGED_IN;
     }
 }
