@@ -24,4 +24,6 @@ public interface EventQuery {
     @GetGeneratedKeys
     int insertEvent(@BindBean Event event);
 
+
+
 }

@@ -91,6 +91,7 @@ public class Archery {
 
                     ApiBuilder.path("parkours", () -> {
                         ApiBuilder.put(ParkourController::handleCreateParkour, roles(MyRole.LOGGED_IN));
+                        ApiBuilder.get(ParkourController::getParkourList, roles(MyRole.LOGGED_IN));
                     });
                 });
             });
@@ -99,24 +100,6 @@ public class Archery {
                 exception.printStackTrace();
                 ctx.status(500).json(new ErrorResponse("INTERNAL_SERVER_ERROR", "A internal server error has occurred"));
             });
-
-            // PUT /api/v1/users
-            // POST /api/v1/users/create
-
-            /*
-            app.routes(() -> {
-    path("users", () -> {
-        get(UserController::getAllUsers);
-        post(UserController::createUser);
-        path(":id", () -> {
-            get(UserController::getUser);
-            patch(UserController::updateUser);
-            delete(UserController::deleteUser);
-        });
-        ws("events", userController::webSocketEvents);
-    });
-});
-             */
 
         } catch (JdbiException e) {
             handleException("Connection couldn't be established", e);

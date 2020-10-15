@@ -55,4 +55,8 @@ public class ParkourController {
             ctx.json(new SuccessResponse());
         }
     }
+
+    public static void getParkourList(Context ctx) {
+
+    }
 }

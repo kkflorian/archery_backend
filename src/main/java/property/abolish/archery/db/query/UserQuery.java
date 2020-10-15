@@ -7,6 +7,8 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import property.abolish.archery.db.model.User;
 
+import java.util.List;
+
 public interface UserQuery {
 
     @SqlQuery("SELECT * FROM user WHERE UPPER(username) = UPPER(:username)")
@@ -20,4 +22,8 @@ public interface UserQuery {
     @SqlQuery("SELECT * FROM user WHERE id = :userId")
     @RegisterBeanMapper(User.class)
     User getUserByUserId(int userId);
+
+    @SqlQuery("SELECT * FROM user WHERE UPPER(username) in :usernames") //TODO: check case sensitivity
+    @RegisterBeanMapper(User.class)
+    List<User> getUsersByUsername(String usernames);
 }
