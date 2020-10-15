@@ -8,6 +8,7 @@ import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.Event;
 import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.query.EventQuery;
+import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.http.model.ErrorResponse;
 import property.abolish.archery.http.model.EventRequest;
 import property.abolish.archery.http.model.SuccessResponse;
@@ -73,7 +74,13 @@ public class EventController {
                     .map(n -> String.valueOf(n))
                     .collect(Collectors.joining("\",\"", "(\"", "\")"));
 
+            UserQuery userQuery = dbConnection.attach(UserQuery.class);
+            List<User> users = userQuery.getUsersByUsername(eventMember);
 
+
+            for (User member: users){
+
+            }
 
             dbConnection.commit();
             ctx.json(new SuccessResponse());
