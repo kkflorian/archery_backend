@@ -67,7 +67,7 @@ public class EventController {
             event.setUserIdCreator(user.getId());
 
             EventQuery eventQuery = dbConnection.attach(EventQuery.class);
-            int evendId = eventQuery.insertEvent(event);
+            int eventId = eventQuery.insertEvent(event);
 
             // Add event members
             String eventMember = req.eventMember.stream()
@@ -77,10 +77,22 @@ public class EventController {
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
             List<User> users = userQuery.getUsersByUsername(eventMember);
 
+            List<Integer> membersId = null;
+            StringBuilder eventMemberSQL = new StringBuilder("(");
+            int i = 0;
+            int max = users.size();
 
             for (User member: users){
-
+                eventMemberSQL.append(eventId).append(",").append(member.getId());
+                if (i < max){
+                    eventMemberSQL.append("),(");
+                } else {
+                    eventMemberSQL.append(")");
+                }
+                i++;
             }
+
+            eventQuery.insertEventMember(eventMemberSQL.toString());
 
             dbConnection.commit();
             ctx.json(new SuccessResponse());

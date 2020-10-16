@@ -24,6 +24,7 @@ public interface EventQuery {
     @GetGeneratedKeys
     int insertEvent(@BindBean Event event);
 
-
+    @SqlUpdate("INSERT INTO eventMember (eventId, userId) VALUES (:eventMemberSQL)")
+    void insertEventMember(String eventMemberSQL);
 
 }
