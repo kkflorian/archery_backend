@@ -4,23 +4,24 @@ import com.kosprov.jargon2.api.Jargon2;
 import io.javalin.core.validation.Validator;
 import io.javalin.http.Context;
 import org.jdbi.v3.core.Handle;
-import org.jetbrains.annotations.NotNull;
 import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.model.UserSession;
 import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
+import property.abolish.archery.http.misc.CookieBaker;
 import property.abolish.archery.http.model.ErrorResponse;
 import property.abolish.archery.http.model.LoginRequest;
 import property.abolish.archery.http.model.RegisterRequest;
 import property.abolish.archery.http.model.SuccessResponse;
 import property.abolish.archery.utilities.Validation;
 
-import javax.servlet.http.Cookie;
 import java.time.Instant;
 
 import static com.kosprov.jargon2.api.Jargon2.jargon2Hasher;
 import static com.kosprov.jargon2.api.Jargon2.jargon2Verifier;
+import static property.abolish.archery.http.misc.CookieBaker.SameSiteValue.LAX;
+import static property.abolish.archery.http.misc.CookieBaker.SameSiteValue.NONE;
 import static property.abolish.archery.utilities.General.createRandomAlphanumeric;
 
 public class UserController {
@@ -138,7 +139,14 @@ public class UserController {
         try (Handle dbConnection = Archery.getConnection()) {
             UserSessionQuery userSessionQuery = dbConnection.attach(UserSessionQuery.class);
             userSessionQuery.invalidateUserSession(userSession.getSessionId());
-            ctx.removeCookie(COOKIE_NAME_SESSION).json(new SuccessResponse());
+
+            CookieBaker.deletionCookie(COOKIE_NAME_SESSION)
+                    .httpOnly(true)
+                    .secure(!Archery.getConfig().allowInsecureCookies)
+                    .sameSite(Archery.getConfig().devModeURL != null ? NONE : LAX)
+                    .addToJavalinContext(ctx);
+
+            ctx.json(new SuccessResponse());
         }
     }
 
@@ -151,16 +159,12 @@ public class UserController {
 
         userSessionQuery.insertUserSession(userSession);
 
-        ctx.cookie(getSessionCookie(sessionId));
-    }
-
-    @NotNull
-    private static Cookie getSessionCookie(String sessionId) {
-        Cookie cookie = new Cookie(COOKIE_NAME_SESSION, sessionId);
-        cookie.setMaxAge(SESSION_MAX_AGE);
-        cookie.setSecure(!Archery.getConfig().allowInsecureCookies);
-        cookie.setHttpOnly(true);
-        return cookie;
+        CookieBaker.create(COOKIE_NAME_SESSION, sessionId)
+                .maxAge(SESSION_MAX_AGE)
+                .httpOnly(true)
+                .secure(!Archery.getConfig().allowInsecureCookies)
+                .sameSite(Archery.getConfig().devModeURL != null ? NONE : LAX)
+                .addToJavalinContext(ctx);
     }
 
     private static String encodeHash(String password) {
