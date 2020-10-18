@@ -10,10 +10,7 @@ import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.model.UserSession;
 import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
-import property.abolish.archery.http.model.ErrorResponse;
-import property.abolish.archery.http.model.LoginRequest;
-import property.abolish.archery.http.model.RegisterRequest;
-import property.abolish.archery.http.model.SuccessResponse;
+import property.abolish.archery.http.model.*;
 import property.abolish.archery.utilities.Validation;
 
 import javax.servlet.http.Cookie;
@@ -130,7 +127,7 @@ public class UserController {
             return;
         }
 
-        ctx.json(user.getUsername()).json(new SuccessResponse());
+        ctx.json(new GetUserResponse(user.getUsername()));
     }
 
     public static void handleSignOff(Context ctx) {

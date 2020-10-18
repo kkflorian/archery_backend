@@ -1,17 +1,16 @@
 package property.abolish.archery.http.controller;
 
-import com.google.gson.Gson;
 import io.javalin.core.validation.Validator;
 import io.javalin.http.Context;
 import org.jdbi.v3.core.Handle;
 import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.Event;
+import property.abolish.archery.db.model.Parkour;
 import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.query.EventQuery;
+import property.abolish.archery.db.query.ParkourQuery;
 import property.abolish.archery.db.query.UserQuery;
-import property.abolish.archery.http.model.ErrorResponse;
-import property.abolish.archery.http.model.EventRequest;
-import property.abolish.archery.http.model.SuccessResponse;
+import property.abolish.archery.http.model.*;
 import property.abolish.archery.utilities.Validation;
 
 import java.time.Instant;
@@ -32,17 +31,34 @@ public class EventController {
                 return;
             }
 
-            Gson gson = new Gson();
+            ParkourQuery parkourQuery = dbConnection.attach(ParkourQuery.class);
+            UserQuery userQuery = dbConnection.attach(UserQuery.class);
+            List<EventInfos> listOfEventInfos = null;
 
             for (Event event : eventList) {
+                EventInfos eventInfos = new EventInfos();
+                eventInfos.timestamp = event.getTimestamp();
+
+                Parkour parkour = parkourQuery.getParkourById(event.getParkourId());
+                eventInfos.parkour = parkour.getName();
+
+                User creator =  userQuery.getUserByUserId(event.getUserIdCreator());
+                String[] creatorInfo = {creator.getUsername(), creator.getFirstName(), creator.getLastName()};
+                eventInfos.creator = creatorInfo;
+
                 List<User> members = eventQuery.getEventMembersByEventId(event.getId());
-                String test = gson.toJson(members);
-                //TODO: handleCreateEvent zuerst implementieren
+                List<String[]> memberInfo = null;
+                for (User member: members) {
+                    String[] temp = {member.getUsername(), member.getFirstName(), member.getLastName()};
+                    memberInfo.add(temp);
+                }
+
+                eventInfos.member = memberInfo;
+
+                listOfEventInfos.add(eventInfos);
             }
 
-            /*
-
-             */
+            ctx.json(new EventListResponse(listOfEventInfos));
         }
     }
 
@@ -79,18 +95,13 @@ public class EventController {
 
             List<Integer> membersId = null;
             StringBuilder eventMemberSQL = new StringBuilder("(");
-            int i = 0;
-            int max = users.size();
 
             for (User member: users){
                 eventMemberSQL.append(eventId).append(",").append(member.getId());
-                if (i < max){
                     eventMemberSQL.append("),(");
-                } else {
-                    eventMemberSQL.append(")");
-                }
-                i++;
             }
+
+            eventMemberSQL.append(eventId).append(",").append(user.getId()).append(")");
 
             eventQuery.insertEventMember(eventMemberSQL.toString());
 
@@ -99,3 +110,4 @@ public class EventController {
         }
     }
 }
+
