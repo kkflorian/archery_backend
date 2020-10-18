@@ -6,7 +6,6 @@ import io.javalin.Javalin;
 import io.javalin.apibuilder.ApiBuilder;
 import io.javalin.core.security.Role;
 import io.javalin.http.Context;
-import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJson;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Handles;
@@ -21,12 +20,12 @@ import property.abolish.archery.http.controller.EventController;
 import property.abolish.archery.http.controller.ParkourController;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.ErrorResponse;
-import property.abolish.archery.http.model.SuccessResponse;
 
 import java.io.IOException;
 import java.time.Instant;
 
 import static io.javalin.core.security.SecurityUtil.roles;
+import static property.abolish.archery.http.controller.UserController.COOKIE_NAME_SESSION;
 import static property.abolish.archery.utilities.General.handleException;
 
 public class Archery {
@@ -126,7 +125,7 @@ public class Archery {
     }
 
     private static MyRole getUserRole(Context ctx) {
-        String sessionId = ctx.cookie("Session");
+        String sessionId = ctx.cookie(COOKIE_NAME_SESSION);
 
         if (sessionId == null || sessionId.isEmpty()) {
             return MyRole.ANYONE;
