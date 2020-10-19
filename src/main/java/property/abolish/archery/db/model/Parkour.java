@@ -10,6 +10,7 @@ public class Parkour {
     private String street;
     private String zip;
     private double latitude;
+    private double longitude;
 
     public int getId() {
         return id;
@@ -83,5 +84,4 @@ public class Parkour {
         this.longitude = longitude;
     }
 
-    private double longitude;
 }

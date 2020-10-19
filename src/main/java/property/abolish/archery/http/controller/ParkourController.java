@@ -8,6 +8,7 @@ import property.abolish.archery.db.model.Parkour;
 import property.abolish.archery.db.query.ParkourQuery;
 import property.abolish.archery.http.model.ErrorResponse;
 import property.abolish.archery.http.model.ParkourRequest;
+import property.abolish.archery.http.model.ParkourResponse;
 import property.abolish.archery.http.model.SuccessResponse;
 import property.abolish.archery.utilities.Validation;
 
@@ -56,7 +57,20 @@ public class ParkourController {
         }
     }
 
-    public static void getParkourList(Context ctx) {
+    public static void handleGetParkourList(Context ctx) {
+        Validator<ParkourRequest> validator = ctx.bodyValidator(ParkourRequest.class)
+                .check(r -> !Validation.isNullOrEmpty(r.name), "name cannot be null or empty");
 
+        if (validator.hasError()) {
+            Validation.handleValidationError(ctx, validator);
+            return;
+        }
+
+        try (Handle dbConnection = Archery.getConnection()){
+            ParkourRequest req = validator.get();
+            ParkourQuery parkourQuery = dbConnection.attach(ParkourQuery.class);
+
+            ctx.json(new ParkourResponse(parkourQuery.getParkourListByName(req.name)));
+        }
     }
 }

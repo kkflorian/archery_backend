@@ -6,6 +6,8 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import property.abolish.archery.db.model.Parkour;
 
+import java.util.List;
+
 public interface ParkourQuery {
 
     @SqlQuery("SELECT * FROM parkour WHERE UPPER(name) = UPPER(:name) AND countAnimals = :countAnimals AND UPPER(countryCode) = UPPER(:countryCode) AND UPPER(city) = UPPER(:city) AND UPPER(street) = UPPER(:street) AND UPPER(zip) = UPPER(:zip)")
@@ -18,4 +20,8 @@ public interface ParkourQuery {
     @SqlQuery("SELECT * FROM parkour WHERE parkour.id = :id")
     @RegisterBeanMapper(Parkour.class)
     Parkour getParkourById(int id);
+
+    @SqlQuery("SELECT * FROM parkour where name like '%' || :name || '%'")
+    @RegisterBeanMapper(Parkour.class)
+    List<Parkour> getParkourListByName(String name);
 }

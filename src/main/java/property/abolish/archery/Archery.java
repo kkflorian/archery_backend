@@ -90,7 +90,7 @@ public class Archery {
 
                     ApiBuilder.path("parkours", () -> {
                         ApiBuilder.put(ParkourController::handleCreateParkour, roles(MyRole.LOGGED_IN));
-                        ApiBuilder.get(ParkourController::getParkourList, roles(MyRole.LOGGED_IN));
+                        ApiBuilder.post(ParkourController::handleGetParkourList, roles(MyRole.LOGGED_IN));
                     });
                 });
             });
