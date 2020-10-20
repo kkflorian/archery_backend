@@ -6,10 +6,10 @@ import org.jdbi.v3.core.Handle;
 import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.Parkour;
 import property.abolish.archery.db.query.ParkourQuery;
-import property.abolish.archery.http.model.ErrorResponse;
-import property.abolish.archery.http.model.ParkourRequest;
-import property.abolish.archery.http.model.ParkourResponse;
-import property.abolish.archery.http.model.SuccessResponse;
+import property.abolish.archery.http.model.responses.ErrorResponse;
+import property.abolish.archery.http.model.requests.ParkourRequest;
+import property.abolish.archery.http.model.responses.ParkourResponse;
+import property.abolish.archery.http.model.responses.SuccessResponse;
 import property.abolish.archery.utilities.Validation;
 
 public class ParkourController {
@@ -41,8 +41,8 @@ public class ParkourController {
             // Check if parkour already exists
             ParkourQuery parkourQuery = dbConnection.attach(ParkourQuery.class);
 
-            if (parkourQuery.getParkourByName_countAnimals_countryCode_city_street_zip(parkour) != null){
-                ctx.status(404).json(new ErrorResponse("PARKOUR_ALREADY_EXISTS", "Dieser Parkour existiert bereits"));
+            if (parkourQuery.getParkour(parkour) != null){
+                ctx.status(409).json(new ErrorResponse("PARKOUR_ALREADY_EXISTS", "Dieser Parkour existiert bereits"));
                 return;
             }
 
@@ -58,19 +58,10 @@ public class ParkourController {
     }
 
     public static void handleGetParkourList(Context ctx) {
-        Validator<ParkourRequest> validator = ctx.bodyValidator(ParkourRequest.class)
-                .check(r -> !Validation.isNullOrEmpty(r.name), "name cannot be null or empty");
-
-        if (validator.hasError()) {
-            Validation.handleValidationError(ctx, validator);
-            return;
-        }
-
         try (Handle dbConnection = Archery.getConnection()){
-            ParkourRequest req = validator.get();
             ParkourQuery parkourQuery = dbConnection.attach(ParkourQuery.class);
 
-            ctx.json(new ParkourResponse(parkourQuery.getParkourListByName(req.name)));
+            ctx.json(new ParkourResponse(parkourQuery.getParkourList()));
         }
     }
 }

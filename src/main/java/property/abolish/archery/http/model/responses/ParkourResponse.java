@@ -1,4 +1,4 @@
-package property.abolish.archery.http.model;
+package property.abolish.archery.http.model.responses;
 
 import property.abolish.archery.db.model.Parkour;
 

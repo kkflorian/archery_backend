@@ -1,4 +1,4 @@
-package property.abolish.archery.http.model;
+package property.abolish.archery.http.model.requests;
 
 public class ParkourRequest {
     public String name;

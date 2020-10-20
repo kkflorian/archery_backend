@@ -2,10 +2,12 @@ package property.abolish.archery.db.query;
 
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
+import org.jdbi.v3.sqlobject.customizer.BindBeanList;
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import property.abolish.archery.db.model.Event;
+import property.abolish.archery.db.model.EventMember;
 import property.abolish.archery.db.model.User;
 
 import java.util.List;
@@ -24,7 +26,7 @@ public interface EventQuery {
     @GetGeneratedKeys
     int insertEvent(@BindBean Event event);
 
-    @SqlUpdate("INSERT INTO eventMember (eventId, userId) VALUES (:eventMemberSQL)")
-    void insertEventMember(String eventMemberSQL);
+    @SqlUpdate("INSERT INTO eventMember (eventId, userId) VALUES <values>")
+    void insertEventMember(@BindBeanList(propertyNames = {"eventId", "userId"}) List<EventMember> values);
 
 }

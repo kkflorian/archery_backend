@@ -12,7 +12,7 @@ public interface ParkourQuery {
 
     @SqlQuery("SELECT * FROM parkour WHERE UPPER(name) = UPPER(:name) AND countAnimals = :countAnimals AND UPPER(countryCode) = UPPER(:countryCode) AND UPPER(city) = UPPER(:city) AND UPPER(street) = UPPER(:street) AND UPPER(zip) = UPPER(:zip)")
     @RegisterBeanMapper(Parkour.class)
-    Parkour getParkourByName_countAnimals_countryCode_city_street_zip(@BindBean Parkour parkour);
+    Parkour getParkour(@BindBean Parkour parkour);
 
     @SqlUpdate("INSERT INTO parkour (name, countAnimals, countryCode, city, street, zip, latitude, longitude) VALUES (:name, :countAnimals, :countryCode, :city, :street, :zip, :latitude, :longitude)")
     void insertParkour(@BindBean Parkour parkour);
@@ -21,7 +21,7 @@ public interface ParkourQuery {
     @RegisterBeanMapper(Parkour.class)
     Parkour getParkourById(int id);
 
-    @SqlQuery("SELECT * FROM parkour where name like '%' || :name || '%'")
+    @SqlQuery("SELECT * FROM parkour")
     @RegisterBeanMapper(Parkour.class)
-    List<Parkour> getParkourListByName(String name);
+    List<Parkour> getParkourList();
 }

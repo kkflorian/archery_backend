@@ -3,7 +3,6 @@ package property.abolish.archery;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.javalin.Javalin;
-import io.javalin.apibuilder.ApiBuilder;
 import io.javalin.core.security.Role;
 import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
@@ -19,11 +18,12 @@ import property.abolish.archery.db.query.UserSessionQuery;
 import property.abolish.archery.http.controller.EventController;
 import property.abolish.archery.http.controller.ParkourController;
 import property.abolish.archery.http.controller.UserController;
-import property.abolish.archery.http.model.ErrorResponse;
+import property.abolish.archery.http.model.responses.ErrorResponse;
 
 import java.io.IOException;
 import java.time.Instant;
 
+import static io.javalin.apibuilder.ApiBuilder.*;
 import static io.javalin.core.security.SecurityUtil.roles;
 import static property.abolish.archery.http.controller.UserController.COOKIE_NAME_SESSION;
 import static property.abolish.archery.utilities.General.handleException;
@@ -33,7 +33,7 @@ public class Archery {
     private static Config config;
 
     public enum MyRole implements Role {
-        ANYONE, LOGGED_IN;
+        ANYONE, LOGGED_IN
     }
 
     public static void main(String[] args) {
@@ -51,6 +51,7 @@ public class Archery {
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JavalinJson.setFromJsonMapper(gson::fromJson);
+        //noinspection NullableProblems
         JavalinJson.setToJsonMapper(gson::toJson);
 
         try (Handle dbConnection = getConnection()) {
@@ -74,23 +75,27 @@ public class Archery {
                 });
             }).start("localhost", config.webPort);
 
+            //noinspection CodeBlock2Expr
             httpServer.routes(() -> {
-                ApiBuilder.path("api/v1", () -> {
-                    ApiBuilder.path("users", () -> {
-                        ApiBuilder.post("login", UserController::handleLogin, roles(MyRole.ANYONE, MyRole.LOGGED_IN));
-                        ApiBuilder.put(UserController::handleRegister, roles(MyRole.ANYONE, MyRole.LOGGED_IN));
-                        ApiBuilder.get(UserController::handleGetUser, roles(MyRole.LOGGED_IN));
-                        ApiBuilder.post("signoff", UserController::handleSignOff, roles(MyRole.LOGGED_IN));
+                path("api/v1", () -> {
+                    path("users", () -> {
+                        path("session", () -> {
+                            put(UserController::handleLogin, roles(MyRole.ANYONE, MyRole.LOGGED_IN));
+                            delete(UserController::handleSignOff, roles(MyRole.LOGGED_IN));
+                            get(UserController::handleGetUser, roles(MyRole.LOGGED_IN));
+                        });
+                        post(UserController::handleGetUsersBySearchTerm, roles(MyRole.LOGGED_IN));
+                        put(UserController::handleRegister, roles(MyRole.ANYONE, MyRole.LOGGED_IN));
                     });
 
-                    ApiBuilder.path("events", () -> {
-                        ApiBuilder.get(EventController::handleGetEventList, roles(MyRole.LOGGED_IN));
-                        ApiBuilder.put(EventController::handleCreateEvent, roles(MyRole.LOGGED_IN));
+                    path("events", () -> {
+                        get(EventController::handleGetEventList, roles(MyRole.LOGGED_IN));
+                        put(EventController::handleCreateEvent, roles(MyRole.LOGGED_IN));
                     });
 
-                    ApiBuilder.path("parkours", () -> {
-                        ApiBuilder.put(ParkourController::handleCreateParkour, roles(MyRole.LOGGED_IN));
-                        ApiBuilder.post(ParkourController::handleGetParkourList, roles(MyRole.LOGGED_IN));
+                    path("parkours", () -> {
+                        put(ParkourController::handleCreateParkour, roles(MyRole.LOGGED_IN));
+                        get(ParkourController::handleGetParkourList, roles(MyRole.LOGGED_IN));
                     });
                 });
             });
@@ -102,7 +107,6 @@ public class Archery {
 
         } catch (JdbiException e) {
             handleException("Connection couldn't be established", e);
-            return;
         }
     }
 

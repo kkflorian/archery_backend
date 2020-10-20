@@ -1,4 +1,4 @@
-package property.abolish.archery.http.model;
+package property.abolish.archery.http.model.responses;
 
 public class ErrorResponse {
     public String status = "error";

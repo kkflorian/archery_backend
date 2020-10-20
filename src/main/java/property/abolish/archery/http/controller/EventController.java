@@ -5,17 +5,21 @@ import io.javalin.http.Context;
 import org.jdbi.v3.core.Handle;
 import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.Event;
+import property.abolish.archery.db.model.EventMember;
 import property.abolish.archery.db.model.Parkour;
 import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.query.EventQuery;
 import property.abolish.archery.db.query.ParkourQuery;
 import property.abolish.archery.db.query.UserQuery;
-import property.abolish.archery.http.model.*;
+import property.abolish.archery.http.model.requests.EventRequest;
+import property.abolish.archery.http.model.responses.CreateEventResponse;
+import property.abolish.archery.http.model.responses.ErrorResponse;
+import property.abolish.archery.http.model.responses.EventListResponse;
 import property.abolish.archery.utilities.Validation;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class EventController {
 
@@ -33,29 +37,28 @@ public class EventController {
 
             ParkourQuery parkourQuery = dbConnection.attach(ParkourQuery.class);
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
-            List<EventInfos> listOfEventInfos = null;
+            List<EventListResponse.EventInfo> listOfEventInfos = new ArrayList<>();
 
             for (Event event : eventList) {
-                EventInfos eventInfos = new EventInfos();
-                eventInfos.timestamp = event.getTimestamp();
+                EventListResponse.EventInfo eventInfo = new EventListResponse.EventInfo();
+                eventInfo.timestamp = event.getTimestamp();
 
                 Parkour parkour = parkourQuery.getParkourById(event.getParkourId());
-                eventInfos.parkour = parkour.getName();
+                eventInfo.parkour = parkour.getName();
 
                 User creator =  userQuery.getUserByUserId(event.getUserIdCreator());
-                String[] creatorInfo = {creator.getUsername(), creator.getFirstName(), creator.getLastName()};
-                eventInfos.creator = creatorInfo;
+                eventInfo.creator = new String[]{creator.getUsername(), creator.getFirstName(), creator.getLastName()};
 
                 List<User> members = eventQuery.getEventMembersByEventId(event.getId());
-                List<String[]> memberInfo = null;
+                List<String[]> memberInfo = new ArrayList<>();
                 for (User member: members) {
                     String[] temp = {member.getUsername(), member.getFirstName(), member.getLastName()};
                     memberInfo.add(temp);
                 }
 
-                eventInfos.member = memberInfo;
+                eventInfo.member = memberInfo;
 
-                listOfEventInfos.add(eventInfos);
+                listOfEventInfos.add(eventInfo);
             }
 
             ctx.json(new EventListResponse(listOfEventInfos));
@@ -64,8 +67,8 @@ public class EventController {
 
     public static void handleCreateEvent(Context ctx) {
         Validator<EventRequest> validator = ctx.bodyValidator(EventRequest.class)
-                .check(r -> !(r.parkourId == 0), "parkourId cannot be zero")
-                .check(r -> !(r.gamemodeId == 0), "gamemodeId cannot be zero");
+                .check(r -> r.parkourId != 0, "parkourId cannot be zero")
+                .check(r -> r.gamemodeId != 0, "gamemodeId cannot be zero");
         if (validator.hasError()) {
             Validation.handleValidationError(ctx, validator);
             return;
@@ -86,27 +89,20 @@ public class EventController {
             int eventId = eventQuery.insertEvent(event);
 
             // Add event members
-            String eventMember = req.eventMember.stream()
-                    .map(n -> String.valueOf(n))
-                    .collect(Collectors.joining("\",\"", "(\"", "\")"));
-
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
-            List<User> users = userQuery.getUsersByUsername(eventMember);
+            req.eventMember.replaceAll(String::toUpperCase);
+            List<User> users = userQuery.getUsersByUsernames(req.eventMember);
 
-            List<Integer> membersId = null;
-            StringBuilder eventMemberSQL = new StringBuilder("(");
+            List<EventMember> eventMemberSQL = new ArrayList<>();
 
-            for (User member: users){
-                eventMemberSQL.append(eventId).append(",").append(member.getId());
-                    eventMemberSQL.append("),(");
+            for (User member: users) {
+                eventMemberSQL.add(new EventMember(eventId, member.getId()));
             }
 
-            eventMemberSQL.append(eventId).append(",").append(user.getId()).append(")");
-
-            eventQuery.insertEventMember(eventMemberSQL.toString());
+            eventQuery.insertEventMember(eventMemberSQL);
 
             dbConnection.commit();
-            ctx.json(new SuccessResponse());
+            ctx.json(new CreateEventResponse(eventId));
         }
     }
 }

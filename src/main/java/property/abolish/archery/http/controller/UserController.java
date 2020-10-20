@@ -9,12 +9,12 @@ import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.model.UserSession;
 import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
-import property.abolish.archery.http.model.*;
 import property.abolish.archery.http.misc.CookieBaker;
-import property.abolish.archery.http.model.ErrorResponse;
-import property.abolish.archery.http.model.LoginRequest;
-import property.abolish.archery.http.model.RegisterRequest;
-import property.abolish.archery.http.model.SuccessResponse;
+import property.abolish.archery.http.model.responses.ErrorResponse;
+import property.abolish.archery.http.model.requests.LoginRequest;
+import property.abolish.archery.http.model.requests.RegisterRequest;
+import property.abolish.archery.http.model.responses.GetUserResponse;
+import property.abolish.archery.http.model.responses.SuccessResponse;
 import property.abolish.archery.utilities.Validation;
 
 import java.time.Instant;
@@ -151,6 +151,17 @@ public class UserController {
         }
     }
 
+    public static void handleGetUsersBySearchTerm(Context ctx) {
+        Validator<RegisterRequest> validator = ctx.bodyValidator(RegisterRequest.class)
+                .check(r -> !Validation.isNullOrEmpty(r.firstName), "firstName cannot be null or empty")
+                .check(r -> !Validation.isNullOrEmpty(r.lastName), "lastName cannot be null or empty")
+                .check(r -> !Validation.isNullOrEmpty(r.username), "username cannot be null or empty")
+                .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty");
+        if (validator.hasError()) {
+            Validation.handleValidationError(ctx, validator);
+        }
+    }
+
     private static void createSession(UserSessionQuery userSessionQuery, int userId, Context ctx) {
         String sessionId = createRandomAlphanumeric(32);
         UserSession userSession = new UserSession();
@@ -163,6 +174,7 @@ public class UserController {
         CookieBaker.create(COOKIE_NAME_SESSION, sessionId)
                 .maxAge(SESSION_MAX_AGE)
                 .httpOnly(true)
+                .path("/")
                 .secure(!Archery.getConfig().allowInsecureCookies)
                 .sameSite(Archery.getConfig().devModeURL != null ? NONE : LAX)
                 .addToJavalinContext(ctx);
@@ -181,11 +193,7 @@ public class UserController {
     }
 
     private static boolean isPasswordCorrect(String password, String hash) {
-        Jargon2.Verifier verifier = jargon2Verifier()
-                .type(Jargon2.Type.ARGON2id)
-                .memoryCost(MEMORY_COST)
-                .timeCost(TIME_COST)
-                .parallelism(PARALLELISM);
+        Jargon2.Verifier verifier = jargon2Verifier();
 
         return verifier.hash(hash).password(password.getBytes()).verifyEncoded();
     }
