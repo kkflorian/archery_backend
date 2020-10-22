@@ -154,3 +154,5 @@ create table if not exists gamemode
 
 create unique index gamemode_gamemode_uindex
     on gamemode (gamemode);
+
+alter table event add column timestampEnd timestamp;

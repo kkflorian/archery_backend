@@ -9,6 +9,15 @@ public class Event {
     private Instant timestamp;
     private int gamemodeId;
     private int userIdCreator;
+    private Instant timestampEnd;
+
+    public Instant getTimestampEnd() {
+        return timestampEnd;
+    }
+
+    public void setTimestampEnd(Instant timestampEnd) {
+        this.timestampEnd = timestampEnd;
+    }
 
     public int getId() {
         return id;
