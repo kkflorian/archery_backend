@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.javalin.Javalin;
 import io.javalin.core.security.Role;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
 import org.jdbi.v3.core.Handle;
@@ -17,6 +18,7 @@ import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
 import property.abolish.archery.http.controller.EventController;
 import property.abolish.archery.http.controller.ParkourController;
+import property.abolish.archery.http.controller.ShotController;
 import property.abolish.archery.http.controller.UserController;
 import property.abolish.archery.http.model.responses.ErrorResponse;
 
@@ -91,6 +93,9 @@ public class Archery {
                     path("events", () -> {
                         get(EventController::handleGetEventList, roles(MyRole.LOGGED_IN));
                         put(EventController::handleCreateEvent, roles(MyRole.LOGGED_IN));
+                        path(":eventId/shots", () -> {
+                           put(ShotController::handleAddShot, roles(MyRole.LOGGED_IN));
+                        });
                     });
 
                     path("parkours", () -> {
@@ -104,6 +109,10 @@ public class Archery {
                 exception.printStackTrace();
                 ctx.status(500).json(new ErrorResponse("INTERNAL_SERVER_ERROR", "A internal server error has occurred"));
             });
+
+            httpServer.exception(BadRequestResponse.class, ((exception, ctx) -> {
+                ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR", exception.getMessage()));
+            }));
 
         } catch (JdbiException e) {
             handleException("Connection couldn't be established", e);
