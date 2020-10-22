@@ -10,14 +10,18 @@ import property.abolish.archery.db.model.UserSession;
 import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
 import property.abolish.archery.http.misc.CookieBaker;
+import property.abolish.archery.http.model.requests.GetUsersRequest;
 import property.abolish.archery.http.model.responses.ErrorResponse;
 import property.abolish.archery.http.model.requests.LoginRequest;
 import property.abolish.archery.http.model.requests.RegisterRequest;
 import property.abolish.archery.http.model.responses.GetUserResponse;
+import property.abolish.archery.http.model.responses.GetUsersResponse;
 import property.abolish.archery.http.model.responses.SuccessResponse;
+import property.abolish.archery.utilities.General;
 import property.abolish.archery.utilities.Validation;
 
 import java.time.Instant;
+import java.util.List;
 
 import static com.kosprov.jargon2.api.Jargon2.jargon2Hasher;
 import static com.kosprov.jargon2.api.Jargon2.jargon2Verifier;
@@ -152,13 +156,22 @@ public class UserController {
     }
 
     public static void handleGetUsersBySearchTerm(Context ctx) {
-        Validator<RegisterRequest> validator = ctx.bodyValidator(RegisterRequest.class)
-                .check(r -> !Validation.isNullOrEmpty(r.firstName), "firstName cannot be null or empty")
-                .check(r -> !Validation.isNullOrEmpty(r.lastName), "lastName cannot be null or empty")
-                .check(r -> !Validation.isNullOrEmpty(r.username), "username cannot be null or empty")
-                .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty");
+        Validator<GetUsersRequest> validator = ctx.bodyValidator(GetUsersRequest.class)
+                .check(r -> r.searchTerm != null, "searchTerm cannot be null")
+                .check(r -> r.limit != 0, "limit cannot be zero");
         if (validator.hasError()) {
             Validation.handleValidationError(ctx, validator);
+            return;
+        }
+
+        try (Handle dbConnection = Archery.getConnection()){
+            GetUsersRequest req = validator.get();
+            UserQuery userQuery = dbConnection.attach(UserQuery.class);
+            User user = ctx.use(User.class);
+
+            List<User> users = userQuery.getUsersBySearchTerm(req.searchTerm, req.limit, user.getId());
+
+            ctx.json(new GetUsersResponse(General.copyLists(users, GetUsersResponse.UserInfo.class)));
         }
     }
 

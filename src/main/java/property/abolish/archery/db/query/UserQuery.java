@@ -28,7 +28,7 @@ public interface UserQuery {
     @RegisterBeanMapper(User.class)
     List<User> getUsersByUsernames(@BindList List<String> usernames);
 
-    @SqlQuery("SELECT * FROM user WHERE username like CONCAT('%', :searchTerm, '%') or firstName like CONCAT('%', :searchTerm, '%') or lastName like CONCAT('%', :searchTerm, '%') ORDER BY username LIMIT :limit")
+    @SqlQuery("SELECT * FROM user WHERE username like CONCAT('%', :searchTerm, '%') or firstName like CONCAT('%', :searchTerm, '%') or lastName like CONCAT('%', :searchTerm, '%') and id != :userId ORDER BY username LIMIT :limit")
     @RegisterBeanMapper(User.class)
-    List<User> getUsersBySearchTerm(String searchTerm, int limit);
+    List<User> getUsersBySearchTerm(String searchTerm, int limit, int userId);
 }

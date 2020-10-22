@@ -20,6 +20,7 @@ import property.abolish.archery.utilities.Validation;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EventController {
 
@@ -46,12 +47,12 @@ public class EventController {
                 Parkour parkour = parkourQuery.getParkourById(event.getParkourId());
                 eventInfo.parkour = parkour.getName();
 
-                User creator =  userQuery.getUserByUserId(event.getUserIdCreator());
+                User creator = userQuery.getUserByUserId(event.getUserIdCreator());
                 eventInfo.creator = new String[]{creator.getUsername(), creator.getFirstName(), creator.getLastName()};
 
                 List<User> members = eventQuery.getEventMembersByEventId(event.getId());
                 List<String[]> memberInfo = new ArrayList<>();
-                for (User member: members) {
+                for (User member : members) {
                     String[] temp = {member.getUsername(), member.getFirstName(), member.getLastName()};
                     memberInfo.add(temp);
                 }
@@ -91,13 +92,10 @@ public class EventController {
             // Add event members
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
             req.eventMember.replaceAll(String::toUpperCase);
-            List<User> users = userQuery.getUsersByUsernames(req.eventMember);
 
-            List<EventMember> eventMemberSQL = new ArrayList<>();
-
-            for (User member: users) {
-                eventMemberSQL.add(new EventMember(eventId, member.getId()));
-            }
+            List<EventMember> eventMemberSQL = userQuery.getUsersByUsernames(req.eventMember).stream()
+                    .map(u -> new EventMember(eventId, u.getId()))
+                    .collect(Collectors.toList());
 
             eventQuery.insertEventMember(eventMemberSQL);
 
