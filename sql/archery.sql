@@ -156,3 +156,4 @@ create unique index gamemode_gamemode_uindex
     on gamemode (gamemode);
 
 alter table event add column timestampEnd timestamp;
+alter table shot modify column id int NOT NULL AUTO_INCREMENT;
