@@ -93,8 +93,10 @@ public class Archery {
                     path("events", () -> {
                         get(EventController::handleGetEventList, roles(MyRole.LOGGED_IN));
                         put(EventController::handleCreateEvent, roles(MyRole.LOGGED_IN));
-                        path(":eventId/shots", () -> {
-                           put(ShotController::handleAddShot, roles(MyRole.LOGGED_IN));
+                        path(":eventId", () -> {
+                            path("shots", () ->
+                                    put(ShotController::handleAddShot, roles(MyRole.LOGGED_IN)));
+                            get(EventController::handleGetEventInfo, roles(MyRole.LOGGED_IN));
                         });
                     });
 
@@ -110,9 +112,8 @@ public class Archery {
                 ctx.status(500).json(new ErrorResponse("INTERNAL_SERVER_ERROR", "A internal server error has occurred"));
             });
 
-            httpServer.exception(BadRequestResponse.class, ((exception, ctx) -> {
-                ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR", exception.getMessage()));
-            }));
+            httpServer.exception(BadRequestResponse.class, ((exception, ctx) ->
+                    ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR", exception.getMessage()))));
 
         } catch (JdbiException e) {
             handleException("Connection couldn't be established", e);

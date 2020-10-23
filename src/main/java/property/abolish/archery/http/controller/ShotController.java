@@ -1,8 +1,11 @@
 package property.abolish.archery.http.controller;
 
-import io.javalin.core.validation.Validator;
 import io.javalin.http.Context;
-import property.abolish.archery.http.model.requests.GetUsersRequest;
+import org.jdbi.v3.core.Handle;
+import property.abolish.archery.Archery;
+import property.abolish.archery.db.model.Shot;
+import property.abolish.archery.db.query.ShotQuery;
+import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.http.model.requests.ShotRequest;
 import property.abolish.archery.utilities.Validation;
 
@@ -16,7 +19,20 @@ public class ShotController {
                 .check(r -> r.shotNumber > 0, "shotNumber cannot be less or equal to zero")
                 .get();
 
-        int eventId = ctx.pathParam("eventId", Integer.class).get();
+        try (Handle dbConnection = Archery.getConnection()) {
+            int eventId = ctx.pathParam("eventId", Integer.class).get();
 
+            Shot shot = new Shot();
+            shot.setEventId(eventId);
+            shot.setAnimalNumber(req.animalNumber);
+            shot.setShotNumber(req.shotNumber);
+            shot.setPoints(req.points);
+
+            UserQuery userQuery = dbConnection.attach(UserQuery.class);
+            shot.setUserId(userQuery.getUserByUsername(req.username).getId());
+
+            ShotQuery shotQuery = dbConnection.attach(ShotQuery.class);
+            shotQuery.insertShot(shot);
+        }
     }
 }

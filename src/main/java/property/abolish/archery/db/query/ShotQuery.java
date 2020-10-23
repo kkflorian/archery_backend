@@ -11,5 +11,5 @@ import java.util.List;
 public interface ShotQuery {
 
     @SqlUpdate("INSERT INTO shot (eventId, userId, animalNumber, shotNumber, points) VALUES (:eventId, :userId, :animalNumber, :shotnumber, :points)")
-    void insertEventMember(@BindBean Shot shot);
+    void insertShot(@BindBean Shot shot);
 }

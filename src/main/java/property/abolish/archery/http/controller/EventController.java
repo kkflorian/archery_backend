@@ -103,5 +103,9 @@ public class EventController {
             ctx.json(new CreateEventResponse(eventId));
         }
     }
+
+    public static void handleGetEventInfo(Context ctx) {
+
+    }
 }
 
