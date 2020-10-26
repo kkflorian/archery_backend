@@ -1,3 +1,6 @@
+create database Archery;
+use Archery;
+
 -- -----------------------------------------------------
 -- Table `user`
 -- -----------------------------------------------------
@@ -33,6 +36,20 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
 COLLATE = utf8_bin;
 
+-- -----------------------------------------------------
+-- Table `gamemode`
+-- -----------------------------------------------------
+
+create table if not exists gamemode
+(
+    id int auto_increment,
+    gamemode varchar(45) not null,
+    constraint gamemode_pk
+        primary key (id)
+);
+
+create unique index gamemode_gamemode_uindex
+    on gamemode (gamemode);
 
 -- -----------------------------------------------------
 -- Table `event`
@@ -67,7 +84,6 @@ CREATE INDEX `id_idx` ON `event` (`parkourId` ASC) ;
 
 CREATE INDEX `id_idx1` ON `event` (`userIdCreator` ASC) ;
 
-
 -- -----------------------------------------------------
 -- Table `eventMember`
 -- -----------------------------------------------------
@@ -90,7 +106,6 @@ DEFAULT CHARACTER SET = utf8
 COLLATE = utf8_bin;
 
 CREATE INDEX `id_idx` ON `eventMember` (`userId` ASC) ;
-
 
 -- -----------------------------------------------------
 -- Table `shot`
@@ -122,7 +137,6 @@ CREATE INDEX `id_idx` ON `shot` (`eventId` ASC) ;
 
 CREATE INDEX `id_idx1` ON `shot` (`userId` ASC) ;
 
-
 -- -----------------------------------------------------
 -- Table `userSession`
 -- -----------------------------------------------------
@@ -139,21 +153,6 @@ CREATE TABLE IF NOT EXISTS `userSession` (
 ENGINE = InnoDB;
 
 CREATE INDEX `userSession_user_idx` ON `userSession` (`userId` ASC) ;
-
--- -----------------------------------------------------
--- Table `gamemode`
--- -----------------------------------------------------
-
-create table if not exists gamemode
-(
-    id int auto_increment,
-    gamemode varchar(45) not null,
-    constraint gamemode_pk
-        primary key (id)
-);
-
-create unique index gamemode_gamemode_uindex
-    on gamemode (gamemode);
 
 alter table event add column timestampEnd timestamp;
 alter table shot modify column id int NOT NULL AUTO_INCREMENT;
