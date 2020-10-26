@@ -2,7 +2,7 @@ package property.abolish.archery.db.model;
 
 public class GameMode {
     private int id;
-    private String gamemode;
+    private String gameMode;
 
     public int getId() {
         return id;
@@ -12,11 +12,11 @@ public class GameMode {
         this.id = id;
     }
 
-    public String getGamemode() {
-        return gamemode;
+    public String getGameMode() {
+        return gameMode;
     }
 
-    public void setGamemode(String gamemode) {
-        this.gamemode = gamemode;
+    public void setGameMode(String gameMode) {
+        this.gameMode = gameMode;
     }
 }

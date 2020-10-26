@@ -43,6 +43,8 @@ public class EventController {
                 EventListResponse.EventInfo eventInfo = new EventListResponse.EventInfo();
                 eventInfo.eventId = event.getId();
                 eventInfo.timestamp = event.getTimestamp().toEpochMilli();
+
+                if (event.getTimestampEnd() != null)
                 eventInfo.timestampEnd = event.getTimestampEnd().toEpochMilli();
 
                 Parkour parkour = parkourQuery.getParkourById(event.getParkourId());
@@ -50,9 +52,11 @@ public class EventController {
                 eventInfo.totalAnimals = parkour.getCountAnimals();
 
                 GameMode gameMode = gameModeQuery.getGameModeById(event.getGamemodeId());
-                eventInfo.gameMode = gameMode.getGamemode();
+                eventInfo.gameMode = gameMode.getGameMode();
 
                 Shot shot = shotQuery.getLatestShot(event.getId());
+
+                if (shot != null)
                 eventInfo.currentAnimal = shot.getAnimalNumber();
 
                 User creator = userQuery.getUserByUserId(event.getUserIdCreator());

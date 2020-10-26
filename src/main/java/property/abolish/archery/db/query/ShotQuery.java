@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ShotQuery {
 
-    @SqlUpdate("INSERT INTO shot (eventId, userId, animalNumber, shotNumber, points) VALUES (:eventId, :userId, :animalNumber, :shotnumber, :points)")
+    @SqlUpdate("INSERT INTO shot (eventId, userId, animalNumber, shotNumber, points) VALUES (:eventId, :userId, :animalNumber, :shotNumber, :points)")
     void insertShot(@BindBean Shot shot);
 
     @SqlQuery("SELECT * FROM shot where eventId = :eventId order by animalNumber DESC LIMIT 1")
