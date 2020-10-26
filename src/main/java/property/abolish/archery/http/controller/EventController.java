@@ -4,17 +4,14 @@ import io.javalin.core.validation.Validator;
 import io.javalin.http.Context;
 import org.jdbi.v3.core.Handle;
 import property.abolish.archery.Archery;
-import property.abolish.archery.db.model.Event;
-import property.abolish.archery.db.model.EventMember;
-import property.abolish.archery.db.model.Parkour;
-import property.abolish.archery.db.model.User;
-import property.abolish.archery.db.query.EventQuery;
-import property.abolish.archery.db.query.ParkourQuery;
-import property.abolish.archery.db.query.UserQuery;
+import property.abolish.archery.db.model.*;
+import property.abolish.archery.db.query.*;
 import property.abolish.archery.http.model.requests.EventRequest;
 import property.abolish.archery.http.model.responses.CreateEventResponse;
 import property.abolish.archery.http.model.responses.ErrorResponse;
 import property.abolish.archery.http.model.responses.EventListResponse;
+import property.abolish.archery.http.model.responses.GameModeResponse;
+import property.abolish.archery.utilities.General;
 import property.abolish.archery.utilities.Validation;
 
 import java.time.Instant;
@@ -38,14 +35,25 @@ public class EventController {
 
             ParkourQuery parkourQuery = dbConnection.attach(ParkourQuery.class);
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
+            GameModeQuery gameModeQuery = dbConnection.attach(GameModeQuery.class);
+            ShotQuery shotQuery = dbConnection.attach(ShotQuery.class);
             List<EventListResponse.EventInfo> listOfEventInfos = new ArrayList<>();
 
             for (Event event : eventList) {
                 EventListResponse.EventInfo eventInfo = new EventListResponse.EventInfo();
-                eventInfo.timestamp = event.getTimestamp();
+                eventInfo.eventId = event.getId();
+                eventInfo.timestamp = event.getTimestamp().toEpochMilli();
+                eventInfo.timestampEnd = event.getTimestampEnd().toEpochMilli();
 
                 Parkour parkour = parkourQuery.getParkourById(event.getParkourId());
                 eventInfo.parkour = parkour.getName();
+                eventInfo.totalAnimals = parkour.getCountAnimals();
+
+                GameMode gameMode = gameModeQuery.getGameModeById(event.getGamemodeId());
+                eventInfo.gameMode = gameMode.getGamemode();
+
+                Shot shot = shotQuery.getLatestShot(event.getId());
+                eventInfo.currentAnimal = shot.getAnimalNumber();
 
                 User creator = userQuery.getUserByUserId(event.getUserIdCreator());
                 eventInfo.creator = new String[]{creator.getUsername(), creator.getFirstName(), creator.getLastName()};
@@ -106,6 +114,14 @@ public class EventController {
 
     public static void handleGetEventInfo(Context ctx) {
 
+    }
+
+    public static void handleGetGameModes(Context ctx) {
+        try (Handle dbConnection = Archery.getConnection()){
+            GameModeQuery gameModeQuery = dbConnection.attach(GameModeQuery.class);
+
+            ctx.json(new GameModeResponse(General.copyLists(gameModeQuery.getGameModes(), GameModeResponse.GameModeInfo.class)));
+        }
     }
 }
 

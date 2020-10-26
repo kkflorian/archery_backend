@@ -16,10 +16,7 @@ import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.model.UserSession;
 import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
-import property.abolish.archery.http.controller.EventController;
-import property.abolish.archery.http.controller.ParkourController;
-import property.abolish.archery.http.controller.ShotController;
-import property.abolish.archery.http.controller.UserController;
+import property.abolish.archery.http.controller.*;
 import property.abolish.archery.http.model.responses.ErrorResponse;
 
 import java.io.IOException;
@@ -89,21 +86,25 @@ public class Archery {
                         post(UserController::handleGetUsersBySearchTerm, roles(MyRole.LOGGED_IN));
                         put(UserController::handleRegister, roles(MyRole.ANYONE, MyRole.LOGGED_IN));
                     });
-
                     path("events", () -> {
                         get(EventController::handleGetEventList, roles(MyRole.LOGGED_IN));
                         put(EventController::handleCreateEvent, roles(MyRole.LOGGED_IN));
                         path(":eventId", () -> {
                             path("shots", () ->
                                     put(ShotController::handleAddShot, roles(MyRole.LOGGED_IN)));
+                            path("stats", () ->
+                                    get(StatsController::handleGetEventStats, roles(MyRole.LOGGED_IN)));
                             get(EventController::handleGetEventInfo, roles(MyRole.LOGGED_IN));
                         });
                     });
-
                     path("parkours", () -> {
                         put(ParkourController::handleCreateParkour, roles(MyRole.LOGGED_IN));
                         get(ParkourController::handleGetParkourList, roles(MyRole.LOGGED_IN));
                     });
+                    path("gamemodes", () ->
+                            get(EventController::handleGetGameModes, roles(MyRole.LOGGED_IN)));
+                    path("stats", () ->
+                            get(StatsController::handleGetOverallStats, roles(MyRole.LOGGED_IN)));
                 });
             });
 

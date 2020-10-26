@@ -14,7 +14,7 @@ import java.util.List;
 
 public interface EventQuery {
 
-    @SqlQuery("SELECT * FROM event JOIN eventMember ON event.id = eventMember.eventId WHERE event.userIdCreator = :userId OR eventMember.userId = :userId")
+    @SqlQuery("SELECT event.* FROM event JOIN eventMember ON event.id = eventMember.eventId WHERE event.userIdCreator = :userId OR eventMember.userId = :userId GROUP BY eventId")
     @RegisterBeanMapper(Event.class)
     List<Event> getEventListbyUserId(int userId);
 
@@ -29,4 +29,7 @@ public interface EventQuery {
     @SqlUpdate("INSERT INTO eventMember (eventId, userId) VALUES <values>")
     void insertEventMember(@BindBeanList(propertyNames = {"eventId", "userId"}) List<EventMember> values);
 
+    @SqlQuery("SELECT * FROM event WHERE id = :eventId")
+    @RegisterBeanMapper(Event.class)
+    Event getEventByEventId(int eventId);
 }

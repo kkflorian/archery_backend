@@ -45,5 +45,4 @@ public class General {
                 .map(fromObject -> copyFields(fromObject, toClass))
                 .collect(Collectors.toList());
     }
-
 }

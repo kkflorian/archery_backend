@@ -12,8 +12,13 @@ public class EventListResponse extends SuccessResponse {
 
     public static class EventInfo {
         public String parkour;
-        public Instant timestamp;
+        public long timestamp;
+        public long timestampEnd;
         public String[] creator;
         public List<String[]> member;
+        public int eventId;
+        public String gameMode;
+        public int currentAnimal;
+        public int totalAnimals;
     }
 }
