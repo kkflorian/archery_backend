@@ -146,6 +146,7 @@ public class UserController {
             userSessionQuery.invalidateUserSession(userSession.getSessionId());
 
             CookieBaker.deletionCookie(COOKIE_NAME_SESSION)
+                    .path("/")
                     .httpOnly(true)
                     .secure(!Archery.getConfig().allowInsecureCookies)
                     .sameSite(Archery.getConfig().devModeURL != null ? NONE : LAX)
