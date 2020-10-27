@@ -19,5 +19,9 @@ public interface ShotQuery {
 
     @SqlQuery("SELECT * FROM shot WHERE eventId = :eventId AND userId = :userId AND animalNumber = :animalNumber")
     @RegisterBeanMapper(Shot.class)
-    List<Shot> getShot(int eventId, int userId, int animalNumber);
+    List<Shot> getShots(int eventId, int userId, int animalNumber);
+
+    @SqlQuery("SELECT * FROM shot WHERE eventId = :eventId AND userId = :userId order by animalNumber, shotNumber")
+    @RegisterBeanMapper(Shot.class)
+    List<Shot> getShots(int eventId, int userId);
 }

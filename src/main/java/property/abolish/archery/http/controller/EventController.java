@@ -7,10 +7,8 @@ import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.*;
 import property.abolish.archery.db.query.*;
 import property.abolish.archery.http.model.requests.EventRequest;
-import property.abolish.archery.http.model.responses.CreateEventResponse;
-import property.abolish.archery.http.model.responses.ErrorResponse;
-import property.abolish.archery.http.model.responses.EventListResponse;
-import property.abolish.archery.http.model.responses.GameModeResponse;
+import property.abolish.archery.http.model.requests.ShotRequest;
+import property.abolish.archery.http.model.responses.*;
 import property.abolish.archery.utilities.General;
 import property.abolish.archery.utilities.Validation;
 
@@ -45,7 +43,7 @@ public class EventController {
                 eventInfo.timestamp = event.getTimestamp().toEpochMilli();
 
                 if (event.getTimestampEnd() != null)
-                eventInfo.timestampEnd = event.getTimestampEnd().toEpochMilli();
+                    eventInfo.timestampEnd = event.getTimestampEnd().toEpochMilli();
 
                 Parkour parkour = parkourQuery.getParkourById(event.getParkourId());
                 eventInfo.parkour = parkour.getName();
@@ -57,7 +55,7 @@ public class EventController {
                 Shot shot = shotQuery.getLatestShot(event.getId());
 
                 if (shot != null)
-                eventInfo.currentAnimal = shot.getAnimalNumber();
+                    eventInfo.currentAnimal = shot.getAnimalNumber();
 
                 User creator = userQuery.getUserByUserId(event.getUserIdCreator());
                 eventInfo.creator = new String[]{creator.getUsername(), creator.getFirstName(), creator.getLastName()};
@@ -117,11 +115,61 @@ public class EventController {
     }
 
     public static void handleGetEventInfo(Context ctx) {
+        try (Handle dbConnection = Archery.getConnection()) {
+            int eventId = ctx.pathParam("eventId", Integer.class).get();
+            EventQuery eventQuery = dbConnection.attach(EventQuery.class);
+            Event event = eventQuery.getEventByEventId(eventId);
 
+            if (event == null) {
+                ctx.status(400).json(new ErrorResponse("EVENT_DOES_NOT_EXIST", "The event does not exist"));
+                return;
+            }
+
+            EventResponse eventResponse = new EventResponse();
+            eventResponse.gameModeId = event.getGamemodeId();
+            eventResponse.parkourId = event.getParkourId();
+            eventResponse.eventIsFinished = event.getTimestampEnd() != null;
+
+            List<EventResponse.Member> member = new ArrayList<>();
+            for (User user : eventQuery.getEventMembersByEventId(eventId)) {
+                EventResponse.Member memberTemp = new EventResponse.Member();
+                memberTemp.username = user.getUsername();
+                memberTemp.firstName = user.getFirstName();
+                memberTemp.lastName = user.getLastName();
+
+                List<Shot> shots = dbConnection.attach(ShotQuery.class).getShots(eventId, user.getId());
+
+                if (shots != null) {
+                    int animalNumberTemp = 1;
+                    List<EventResponse.Shots> shotsResponse = new ArrayList<>();
+                    List<ShotRequest.ShotInfo> shotInfos = new ArrayList<>();
+
+                    for (Shot shot : shots) {
+                        EventResponse.Shots shotsResponseTemp = new EventResponse.Shots();
+                        ShotRequest.ShotInfo shotInfo = new ShotRequest.ShotInfo();
+
+                        shotInfo.shotNumber = shot.getShotNumber();
+                        shotInfo.points = shot.getPoints();
+                        shotInfos.add(shotInfo);
+
+                        if (animalNumberTemp != shot.getAnimalNumber()) {
+                            shotsResponseTemp.animalNumber = shot.getAnimalNumber();
+                            shotsResponseTemp.shotInfos = shotInfos;
+                            shotsResponse.add(shotsResponseTemp);
+                            animalNumberTemp = shot.getAnimalNumber();
+                        }
+                    }
+                    memberTemp.shots = shotsResponse;
+                }
+                member.add(memberTemp);
+            }
+            eventResponse.members = member;
+            ctx.json(eventResponse);
+        }
     }
 
     public static void handleGetGameModes(Context ctx) {
-        try (Handle dbConnection = Archery.getConnection()){
+        try (Handle dbConnection = Archery.getConnection()) {
             GameModeQuery gameModeQuery = dbConnection.attach(GameModeQuery.class);
 
             ctx.json(new GameModeResponse(General.copyLists(gameModeQuery.getGameModes(), GameModeResponse.GameModeInfo.class)));

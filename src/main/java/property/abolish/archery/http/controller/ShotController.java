@@ -82,7 +82,7 @@ public class ShotController {
             }
 
             ShotQuery shotQuery = dbConnection.attach(ShotQuery.class);
-            List<Shot> shots = shotQuery.getShot(eventId, user.getId(), req.animalNumber);
+            List<Shot> shots = shotQuery.getShots(eventId, user.getId(), req.animalNumber);
 
             if (shots != null){
                 ctx.status(409).json(new ErrorResponse("SHOT_ALREADY_EXISTS", "This animal was already played by this user"));
@@ -102,7 +102,9 @@ public class ShotController {
 
             // Finish event when last player is finished with the last animal
             List<User> eventMember = eventQuery.getEventMembersByEventId(eventId);
-            if ((req.animalNumber == dbConnection.attach(ParkourQuery.class).getParkourById(event.getParkourId()).getCountAnimals()) && eventMember.get(eventMember.size() - 1).getId() == user.getId()) {
+            if ((req.animalNumber == dbConnection.attach(ParkourQuery.class).getParkourById(event.getParkourId()).getCountAnimals())
+                    && eventMember.get(eventMember.size() - 1).getId() == user.getId()) {
+
                     event.setTimestampEnd(Instant.now());
                     eventQuery.setEventAsFinished(event);
             }
