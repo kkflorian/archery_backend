@@ -3,20 +3,17 @@ package property.abolish.archery.http.controller;
 import io.javalin.http.Context;
 import org.jdbi.v3.core.Handle;
 import property.abolish.archery.Archery;
-import property.abolish.archery.db.model.Event;
-import property.abolish.archery.db.model.GameMode;
-import property.abolish.archery.db.model.Shot;
-import property.abolish.archery.db.model.User;
-import property.abolish.archery.db.query.EventQuery;
-import property.abolish.archery.db.query.GameModeQuery;
-import property.abolish.archery.db.query.ShotQuery;
-import property.abolish.archery.db.query.UserQuery;
+import property.abolish.archery.db.model.*;
+import property.abolish.archery.db.query.*;
 import property.abolish.archery.http.model.misc.PointsDreipfeilwertung;
 import property.abolish.archery.http.model.misc.PointsZweipfeilwertung;
 import property.abolish.archery.http.model.requests.ShotRequest;
 import property.abolish.archery.http.model.responses.ErrorResponse;
 import property.abolish.archery.http.model.responses.SuccessResponse;
 import property.abolish.archery.utilities.Validation;
+
+import java.time.Instant;
+import java.util.List;
 
 
 public class ShotController {
@@ -85,8 +82,12 @@ public class ShotController {
             }
 
             ShotQuery shotQuery = dbConnection.attach(ShotQuery.class);
+            List<Shot> shots = shotQuery.getShot(eventId, user.getId(), req.animalNumber);
 
-            // TODO: Check if shot already exists
+            if (shots != null){
+                ctx.status(409).json(new ErrorResponse("SHOT_ALREADY_EXISTS", "This animal was already played by this user"));
+                return;
+            }
 
             for(ShotRequest.ShotInfo shotInfo : req.shots){
                 Shot shot = new Shot();
@@ -99,7 +100,12 @@ public class ShotController {
                 shotQuery.insertShot(shot);
             }
 
-            //TODO: event beenden wenn letzter spieler geschossen hat
+            // Finish event when last player is finished with the last animal
+            List<User> eventMember = eventQuery.getEventMembersByEventId(eventId);
+            if ((req.animalNumber == dbConnection.attach(ParkourQuery.class).getParkourById(event.getParkourId()).getCountAnimals()) && eventMember.get(eventMember.size() - 1).getId() == user.getId()) {
+                    event.setTimestampEnd(Instant.now());
+                    eventQuery.setEventAsFinished(event);
+            }
 
             ctx.json(new SuccessResponse());
         }

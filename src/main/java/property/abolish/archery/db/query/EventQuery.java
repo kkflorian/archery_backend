@@ -32,4 +32,7 @@ public interface EventQuery {
     @SqlQuery("SELECT * FROM event WHERE id = :eventId")
     @RegisterBeanMapper(Event.class)
     Event getEventByEventId(int eventId);
+
+    @SqlUpdate("UPDATE event set timestampEnd = :timestampEnd where id = :id")
+    void setEventAsFinished(@BindBean Event event);
 }
