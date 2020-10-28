@@ -18,6 +18,7 @@ import property.abolish.archery.db.query.UserQuery;
 import property.abolish.archery.db.query.UserSessionQuery;
 import property.abolish.archery.http.controller.*;
 import property.abolish.archery.http.model.responses.ErrorResponse;
+import property.abolish.archery.utilities.General;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -48,7 +49,7 @@ public class Archery {
         jdbi.installPlugin(new SqlObjectPlugin());
         jdbi.getConfig(Handles.class).setForceEndTransactions(false);
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = General.getGson();
         JavalinJson.setFromJsonMapper(gson::fromJson);
         //noinspection NullableProblems
         JavalinJson.setToJsonMapper(gson::toJson);

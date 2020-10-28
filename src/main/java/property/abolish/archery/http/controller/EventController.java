@@ -40,10 +40,10 @@ public class EventController {
             for (Event event : eventList) {
                 EventListResponse.EventInfo eventInfo = new EventListResponse.EventInfo();
                 eventInfo.eventId = event.getId();
-                eventInfo.timestamp = event.getTimestamp().toEpochMilli();
+                eventInfo.timestamp = event.getTimestamp();
 
                 if (event.getTimestampEnd() != null)
-                    eventInfo.timestampEnd = event.getTimestampEnd().toEpochMilli();
+                    eventInfo.timestampEnd = event.getTimestampEnd();
 
                 Parkour parkour = parkourQuery.getParkourById(event.getParkourId());
                 eventInfo.parkour = parkour.getName();

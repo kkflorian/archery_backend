@@ -4,6 +4,7 @@ import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
+import property.abolish.archery.db.model.EventStats;
 import property.abolish.archery.db.model.Shot;
 
 import java.util.List;
@@ -24,4 +25,7 @@ public interface ShotQuery {
     @SqlQuery("SELECT * FROM shot WHERE eventId = :eventId AND userId = :userId order by animalNumber, shotNumber")
     @RegisterBeanMapper(Shot.class)
     List<Shot> getShots(int eventId, int userId);
+
+    @SqlQuery("SELECT userId, AVG(points), SUM(points) FROM shot where eventId = :eventId and (points != 0 or shotNumber = 3) group by userId")
+    List<EventStats> getEventStats(int eventId);
 }
