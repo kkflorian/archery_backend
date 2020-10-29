@@ -5,7 +5,9 @@ import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import property.abolish.archery.db.model.EventStats;
+import property.abolish.archery.db.model.Parkour;
 import property.abolish.archery.db.model.Shot;
+import property.abolish.archery.http.model.responses.OverallStatsNumbersResponse;
 
 import java.util.List;
 
@@ -47,6 +49,10 @@ from (select userid, count(*) as totalShots from shot group by userid) a
 join (select userid, count(*) as hitShots from shot where points != 0 group by userid) b on a.userId = b.userId
 
 join (select userid, avg(totalPoints) as averagePoints, sum(totalPoints) from (select userid, animalNumber, sum(points) as totalPoints from shots group by userid, animalNumber) group by userid) c on b.userId = c.userId
+
+
+select sum(points) from shot join event on eventId = event.id where userId = :userId and gamemodeId = :gameModeId group by eventId
+
 */
 
 
@@ -59,7 +65,20 @@ join (select userid, avg(totalPoints) as averagePoints, sum(totalPoints) from (s
             "            join user on a.userId = user.id")
     List<EventStats> getEventStats(int eventId);
 
-    @SqlQuery("")
-    void getOverallStats(int userId);
+    @SqlQuery("select (sum(points) / max(animalNumber)) as graphEntry from shot join event on eventId = event.id where userId = :userId and gamemodeId = :gameModeId group by eventId")
+    List<Integer> getOverallStatsGraphEntries(int userId, int gameModeId);
+
+    @SqlQuery("select a.totalHits, b.totalShots, c.totalEvents, d.averageOverall from (select count(*) as totalHits from shot where points > 0 and userId = :userId) a\n" +
+            "join (select count(*) as totalShots from shot where userId = :userId) b\n" +
+            "join (select count(*) as totalEvents from event\n" +
+            "            left join eventMember on event.id = eventMember.eventId\n" +
+            "            where userIdCreator = :userId or eventMember.userId = :userId) c\n" +
+            "join (select avg(cu.graphEntry) as averageOverall from\n" +
+            "                (select (sum(points) / max(animalNumber)) as graphEntry from shot sh\n" +
+            "                        join event ev on sh.eventId = ev.id\n" +
+            "                        where sh.userId = :userId and ev.gamemodeId = :gameModeId\n" +
+            "                        group by sh.eventId) cu) d")
+    @RegisterBeanMapper(OverallStatsNumbersResponse.class)
+    OverallStatsNumbersResponse getOverallStatsNumbers(int userId, int gameModeId);
 }
 

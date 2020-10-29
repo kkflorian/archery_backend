@@ -154,5 +154,5 @@ ENGINE = InnoDB;
 
 CREATE INDEX `userSession_user_idx` ON `userSession` (`userId` ASC) ;
 
-alter table event add column timestampEnd timestamp;
+alter table event add column timestampEnd timestamp null;
 alter table shot modify column id int NOT NULL AUTO_INCREMENT;

@@ -53,9 +53,7 @@ public class EventController {
                 eventInfo.gameMode = gameMode.getGameMode();
 
                 Shot shot = shotQuery.getLatestShot(event.getId());
-
-                if (shot != null)
-                    eventInfo.currentAnimal = shot.getAnimalNumber();
+                eventInfo.currentAnimal = shot == null ? 1 : shot.getAnimalNumber();
 
                 User creator = userQuery.getUserByUserId(event.getUserIdCreator());
                 eventInfo.creator = new String[]{creator.getUsername(), creator.getFirstName(), creator.getLastName()};

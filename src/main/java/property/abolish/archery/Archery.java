@@ -45,7 +45,7 @@ public class Archery {
             return;
         }
 
-        jdbi = Jdbi.create(String.format("jdbc:mysql://%s:%d/%s?serverTimezone=%s", config.dbIp, config.dbPort, config.dbName, config.dbTimezone), config.dbUser, config.dbPw);
+        jdbi = Jdbi.create(String.format("jdbc:mysql://%s:%d/%s?serverTimezone=%s&zerodatetimebehavior=converttonull", config.dbIp, config.dbPort, config.dbName, config.dbTimezone), config.dbUser, config.dbPw);
         jdbi.installPlugin(new SqlObjectPlugin());
         jdbi.getConfig(Handles.class).setForceEndTransactions(false);
 
@@ -104,9 +104,10 @@ public class Archery {
                     });
                     path("gamemodes", () ->
                             get(EventController::handleGetGameModes, roles(MyRole.LOGGED_IN)));
-                    path("stats", () ->
-                            get("numbers", StatsController::handleGetOverallStatsNumbers, roles(MyRole.LOGGED_IN)));
-                            get("graph", StatsController::handleGetOverallStatsGraph, roles(MyRole.LOGGED_IN));
+                    path("stats/:gameModeId", () -> {
+                        get("numbers", StatsController::handleGetOverallStatsNumbers, roles(MyRole.LOGGED_IN));
+                        get("graph", StatsController::handleGetOverallStatsGraph, roles(MyRole.LOGGED_IN));
+                    });
                 });
             });
 
