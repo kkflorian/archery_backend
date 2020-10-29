@@ -105,7 +105,8 @@ public class Archery {
                     path("gamemodes", () ->
                             get(EventController::handleGetGameModes, roles(MyRole.LOGGED_IN)));
                     path("stats", () ->
-                            get(StatsController::handleGetOverallStats, roles(MyRole.LOGGED_IN)));
+                            get("numbers", StatsController::handleGetOverallStatsNumbers, roles(MyRole.LOGGED_IN)));
+                            get("graph", StatsController::handleGetOverallStatsGraph, roles(MyRole.LOGGED_IN));
                 });
             });
 
