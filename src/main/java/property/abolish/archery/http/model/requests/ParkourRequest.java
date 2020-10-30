@@ -7,4 +7,5 @@ public class ParkourRequest {
     public String city;
     public String street;
     public String zip;
+    public boolean ignoreCoordinates = false;
 }
