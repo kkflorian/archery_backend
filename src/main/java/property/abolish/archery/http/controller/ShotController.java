@@ -109,6 +109,8 @@ public class ShotController {
                     eventQuery.setEventAsFinished(event);
             }
 
+            dbConnection.commit();
+
             ctx.json(new SuccessResponse());
         }
     }
