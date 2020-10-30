@@ -84,7 +84,7 @@ public class ShotController {
             ShotQuery shotQuery = dbConnection.attach(ShotQuery.class);
             List<Shot> shots = shotQuery.getShots(eventId, user.getId(), req.animalNumber);
 
-            if (shots != null){
+            if (!shots.isEmpty()){
                 ctx.status(409).json(new ErrorResponse("SHOT_ALREADY_EXISTS", "This animal was already played by this user"));
                 return;
             }
