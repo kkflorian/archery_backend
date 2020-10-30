@@ -40,7 +40,7 @@ public class ShotController {
                 return;
             }
 
-            GameMode gameMode = dbConnection.attach(GameModeQuery.class).getGameModeById(event.getId());
+            GameMode gameMode = dbConnection.attach(GameModeQuery.class).getGameModeById(event.getGamemodeId());
             if (gameMode == null) {
                 ctx.status(404).json(new ErrorResponse("GAMEMODE_NOT_FOUND", "This gamemode does not exist"));
                 return;
