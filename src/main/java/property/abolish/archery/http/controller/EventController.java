@@ -138,7 +138,7 @@ public class EventController {
                 List<Shot> shots = dbConnection.attach(ShotQuery.class).getShots(eventId, user.getId());
 
                 if (shots != null) {
-                    int animalNumberTemp = 1;
+                    int animalNumberTemp = 0;
                     List<EventResponse.Shots> shotsResponse = new ArrayList<>();
                     List<ShotRequest.ShotInfo> shotInfos = new ArrayList<>();
 
