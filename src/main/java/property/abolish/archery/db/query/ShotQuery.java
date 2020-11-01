@@ -5,7 +5,6 @@ import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import property.abolish.archery.db.model.EventStats;
-import property.abolish.archery.db.model.Parkour;
 import property.abolish.archery.db.model.Shot;
 import property.abolish.archery.http.model.responses.OverallStatsNumbersResponse;
 
@@ -63,6 +62,7 @@ select sum(points) from shot join event on eventId = event.id where userId = :us
             "                        from (select d.userid, sum(d.points) as totalPoints\n" +
             "                               from shot d group by d.userid, d.animalNumber) e group by e.userid) c on b.userId = c.userId\n" +
             "            join user on a.userId = user.id")
+    @RegisterBeanMapper(EventStats.class)
     List<EventStats> getEventStats(int eventId);
 
     @SqlQuery("select (sum(points) / max(animalNumber)) as graphEntry from shot join event on eventId = event.id where userId = :userId and gamemodeId = :gameModeId group by eventId")
