@@ -146,32 +146,36 @@ public class EventController {
 
                 List<Shot> shots = dbConnection.attach(ShotQuery.class).getShots(eventId, user.getId());
 
-                int animalNumberTemp = 1;
-                List<EventResponse.Shot> shotResponse = new ArrayList<>();
-                List<ShotRequest.ShotInfo> shotInfos = new ArrayList<>();
+                if (shots.size() > 0) {
+                    int animalNumberTemp = 1;
+                    List<EventResponse.Shot> shotResponse = new ArrayList<>();
+                    List<ShotRequest.ShotInfo> shotInfos = new ArrayList<>();
 
-                for (int i = 0; i <= shots.size(); i++) {
-                    Shot shot = new Shot();
-                    if (i < shots.size()) {
-                        shot = shots.get(i);
+                    for (int i = 0; i <= shots.size(); i++) {
+                        Shot shot = new Shot();
+                        if (i < shots.size()) {
+                            shot = shots.get(i);
+                        }
+
+                        EventResponse.Shot shotResponseTemp = new EventResponse.Shot();
+                        ShotRequest.ShotInfo shotInfo = new ShotRequest.ShotInfo();
+
+                        if (animalNumberTemp != shot.getAnimalNumber()) {
+                            shotResponseTemp.animalNumber = animalNumberTemp;
+                            shotResponseTemp.shotInfos = shotInfos;
+                            shotInfos = new ArrayList<>();
+                            shotResponse.add(shotResponseTemp);
+                            animalNumberTemp = shot.getAnimalNumber();
+                        }
+
+                        shotInfo.shotNumber = shot.getShotNumber();
+                        shotInfo.points = shot.getPoints();
+                        shotInfos.add(shotInfo);
                     }
-
-                    EventResponse.Shot shotResponseTemp = new EventResponse.Shot();
-                    ShotRequest.ShotInfo shotInfo = new ShotRequest.ShotInfo();
-
-                    if (animalNumberTemp != shot.getAnimalNumber()) {
-                        shotResponseTemp.animalNumber = animalNumberTemp;
-                        shotResponseTemp.shotInfos = shotInfos;
-                        shotInfos = new ArrayList<>();
-                        shotResponse.add(shotResponseTemp);
-                        animalNumberTemp = shot.getAnimalNumber();
-                    }
-
-                    shotInfo.shotNumber = shot.getShotNumber();
-                    shotInfo.points = shot.getPoints();
-                    shotInfos.add(shotInfo);
+                    memberTemp.shots = shotResponse;
+                } else {
+                    memberTemp.shots = new ArrayList<>();
                 }
-                memberTemp.shots = shotResponse;
                 member.add(memberTemp);
             }
             eventResponse.members = member;
