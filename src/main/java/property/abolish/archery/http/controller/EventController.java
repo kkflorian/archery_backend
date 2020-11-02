@@ -120,6 +120,7 @@ public class EventController {
             int eventId = ctx.pathParam("eventId", Integer.class).get();
             EventQuery eventQuery = dbConnection.attach(EventQuery.class);
             Event event = eventQuery.getEventByEventId(eventId);
+            User currentUser = ctx.use(User.class);
 
             if (event == null) {
                 ctx.status(400).json(new ErrorResponse("EVENT_DOES_NOT_EXIST", "The event does not exist"));
@@ -128,6 +129,8 @@ public class EventController {
 
             EventResponse eventResponse = new EventResponse();
             eventResponse.eventId = event.getId();
+
+            eventResponse.isCreator = currentUser.getId() == event.getUserIdCreator();
 
             GameMode gameMode = dbConnection.attach(GameModeQuery.class).getGameModeById(event.getGamemodeId());
             eventResponse.gameMode = new EventResponse.GameMode(gameMode.getId(), gameMode.getGameMode());

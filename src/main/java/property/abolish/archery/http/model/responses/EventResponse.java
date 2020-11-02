@@ -8,6 +8,7 @@ public class EventResponse extends SuccessResponse {
 
     public int eventId;
     public boolean eventIsFinished;
+    public boolean isCreator;
     public EventResponse.GameMode gameMode;
     public EventResponse.Parkour parkour;
     public List<Member> members;

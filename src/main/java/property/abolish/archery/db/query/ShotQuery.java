@@ -27,35 +27,7 @@ public interface ShotQuery {
     @RegisterBeanMapper(Shot.class)
     List<Shot> getShots(int eventId, int userId);
 
-
-    /*
-    select userid, animalNumber, sum(points) as totalPoints from shots group by userid, animalNumber
-
-    1, 1, 10
-    1, 2, 0
-    1, 3, 20
-
-    avg(10, 0, 20)
-
-    select userid, avg(points) from (select userid, animalNumber, sum(points) as totalPoints from shots group by userid, animalNumber) group by userid
-
-    userid, 10
-
-
-
-select a.userId, hitShots as shotsTotal, hitShots / totalShots as accuracy
-from (select userid, count(*) as totalShots from shot group by userid) a
-join (select userid, count(*) as hitShots from shot where points != 0 group by userid) b on a.userId = b.userId
-
-join (select userid, avg(totalPoints) as averagePoints, sum(totalPoints) from (select userid, animalNumber, sum(points) as totalPoints from shots group by userid, animalNumber) group by userid) c on b.userId = c.userId
-
-
-select sum(points) from shot join event on eventId = event.id where userId = :userId and gamemodeId = :gameModeId group by eventId
-
-*/
-
-
-    @SqlQuery("select user.username, user.firstName, user.lastName, hitShots as shotsTotal, hitShots / totalShots as accuracy, c.averagePoints, c.totalPoints\n" +
+    @SqlQuery("select user.username, user.firstName, user.lastName, totalShots, hitShots / totalShots as accuracy, c.averagePoints, c.totalPoints\n" +
             "            from (select userid, count(*) as totalShots from shot join event on event.id = eventId where eventId = :eventId and event.timestampEnd is not null group by userid) a\n" +
             "            join (select userid, count(*) as hitShots from shot join event on event.id = eventId where points != 0 and eventId = :eventId and event.timestampEnd is not null group by userid) b on a.userId = b.userId\n" +
             "            join (select userid, avg(e.totalPoints) as averagePoints, sum(e.totalPoints) as totalPoints\n" +
