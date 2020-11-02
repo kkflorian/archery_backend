@@ -5,8 +5,8 @@ import org.jdbi.v3.core.Handle;
 import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.*;
 import property.abolish.archery.db.query.*;
-import property.abolish.archery.http.model.misc.PointsDreipfeilwertung;
-import property.abolish.archery.http.model.misc.PointsZweipfeilwertung;
+import property.abolish.archery.http.misc.PointsDreipfeilwertung;
+import property.abolish.archery.http.misc.PointsZweipfeilwertung;
 import property.abolish.archery.http.model.requests.ShotRequest;
 import property.abolish.archery.http.model.responses.ErrorResponse;
 import property.abolish.archery.http.model.responses.SuccessResponse;
@@ -48,37 +48,11 @@ public class ShotController {
 
             // Dreipfeilwertung
             if (event.getGamemodeId() == 1) {
-                if (req.shots.size() < 1 || req.shots.size() > 3){
-                    ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR", "Only 1-3 shots are allowed"));
-                    return;
-                }
-
-                for (int i = 0; i < req.shots.size(); i++){
-                    if (i < req.shots.size() - 1 && req.shots.get(i).points != 0) {
-                        ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR","Only the last shot may contain points"));
-                        return;
-                    }
-                }
-
-                int indexOfLastShot = req.shots.size() - 1;
-                if (req.shots.get(indexOfLastShot).points > 0 && !(new PointsDreipfeilwertung().points.get(indexOfLastShot).contains(req.shots.get(indexOfLastShot).points))){
-                    ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR", "Value of points is incorrect"));
-                    return;
-                }
+                if (!PointsDreipfeilwertung.ValidateInput(ctx, req)) return;
             }
             // Zweipfeilwertung
             else if (event.getGamemodeId() == 2) {
-                if (req.shots.size() != 2){
-                    ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR", "There have to be 2 shots"));
-                    return;
-                }
-
-                for(ShotRequest.ShotInfo shotInfo : req.shots){
-                    if (shotInfo.points > 0 && !(new PointsZweipfeilwertung().points.contains(shotInfo.points))){
-                        ctx.status(400).json(new ErrorResponse("VALIDATION_ERROR", "Value of points is incorrect"));
-                        return;
-                    }
-                }
+                if (!PointsZweipfeilwertung.ValidateInput(ctx, req)) return;
             }
 
             ShotQuery shotQuery = dbConnection.attach(ShotQuery.class);
@@ -114,4 +88,5 @@ public class ShotController {
             ctx.json(new SuccessResponse());
         }
     }
+
 }

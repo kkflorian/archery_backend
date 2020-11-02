@@ -13,10 +13,10 @@ public class EventResponse extends SuccessResponse {
     public List<Member> members;
 
     public static class Member extends GetUsersResponse.UserInfo {
-        public List<Shots> shots;
+        public List<Shot> shots;
     }
 
-    public static class Shots {
+    public static class Shot {
         public int animalNumber;
         public List<ShotRequest.ShotInfo> shotInfos;
     }
