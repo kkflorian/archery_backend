@@ -21,6 +21,7 @@ import property.abolish.archery.utilities.General;
 import property.abolish.archery.utilities.Validation;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.kosprov.jargon2.api.Jargon2.jargon2Hasher;
@@ -93,9 +94,13 @@ public class UserController {
     public static void handleRegister(Context ctx) {
         Validator<RegisterRequest> validator = ctx.bodyValidator(RegisterRequest.class)
                 .check(r -> !Validation.isNullOrEmpty(r.firstName), "firstName cannot be null or empty")
+                .check(r -> r.username.length() >= 3 && r.username.length() <= 20, "username must be to between 3 and 20 characters")
+                .check(r -> r.username.matches("^[A-Za-z0-9_]{3,20}$"), "username must be alphanumeric")
                 .check(r -> !Validation.isNullOrEmpty(r.lastName), "lastName cannot be null or empty")
                 .check(r -> !Validation.isNullOrEmpty(r.username), "username cannot be null or empty")
-                .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty");
+                .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty")
+                .check(r -> r.password.length() >= 8, "password must be 8 or more characters")
+                .check(r -> countCharTypes(r.password) > 1, "password must contain at least two different character types");
         if (validator.hasError()) {
             Validation.handleValidationError(ctx, validator);
             return;
@@ -210,6 +215,24 @@ public class UserController {
         Jargon2.Verifier verifier = jargon2Verifier();
 
         return verifier.hash(hash).password(password.getBytes()).verifyEncoded();
+    }
+
+    private static int countCharTypes(String input) {
+
+        int[] counts = new int[]{0,0,0,0};
+
+        for (char ch : input.toCharArray()) {
+            if (Character.isDigit(ch))
+                counts[0]++;
+            else if (Character.isLetter(ch) && Character.isUpperCase(ch))
+                counts[1]++;
+            else if (Character.isLetter(ch) && Character.isLowerCase(ch))
+                counts[2]++;
+            else
+                counts[3]++;
+        }
+
+        return (int)Arrays.stream(counts).filter(r -> r > 0).count();
     }
 
 }
