@@ -4,16 +4,16 @@ public class EventStats {
     private String username;
     private String firstName;
     private String lastName;
-    private int averagePoints;
+    private double averagePoints;
     private int totalPoints;
     private int shotsTotal;
     private double accuracy;
 
-    public int getAveragePoints() {
+    public double getAveragePoints() {
         return averagePoints;
     }
 
-    public void setAveragePoints(int averagePoints) {
+    public void setAveragePoints(double averagePoints) {
         this.averagePoints = averagePoints;
     }
 
