@@ -24,7 +24,7 @@ public class EventController {
 
         try (Handle dbConnection = Archery.getConnection()) {
             EventQuery eventQuery = dbConnection.attach(EventQuery.class);
-            List<Event> eventList = eventQuery.getEventListbyUserId(user.getId());
+            List<Event> eventList = eventQuery.getEventListByUserId(user.getId());
 
             if (eventList == null) {
                 ctx.status(418).json(new ErrorResponse("NO_EVENTS_FOUND", "No previous events found"));
@@ -105,6 +105,9 @@ public class EventController {
                     .map(u -> new EventMember(eventId, u.getId()))
                     .collect(Collectors.toList());
 
+            // Also add event creator as member
+            eventMemberSQL.add(new EventMember(eventId, user.getId()));
+
             eventQuery.insertEventMember(eventMemberSQL);
 
             dbConnection.commit();
@@ -124,8 +127,14 @@ public class EventController {
             }
 
             EventResponse eventResponse = new EventResponse();
-            eventResponse.gameModeId = event.getGamemodeId();
-            eventResponse.parkourId = event.getParkourId();
+            eventResponse.eventId = event.getId();
+
+            GameMode gameMode = dbConnection.attach(GameModeQuery.class).getGameModeById(event.getGamemodeId());
+            eventResponse.gameMode = new EventResponse.GameMode(gameMode.getId(), gameMode.getGameMode());
+
+            Parkour parkour = dbConnection.attach(ParkourQuery.class).getParkourById(event.getParkourId());
+            eventResponse.parkour = new EventResponse.Parkour(parkour.getId(), parkour.getName(), parkour.getCountAnimals());
+
             eventResponse.eventIsFinished = event.getTimestampEnd() != null;
 
             List<EventResponse.Member> member = new ArrayList<>();
@@ -138,24 +147,30 @@ public class EventController {
                 List<Shot> shots = dbConnection.attach(ShotQuery.class).getShots(eventId, user.getId());
 
                 if (shots != null) {
-                    int animalNumberTemp = 0;
+                    int animalNumberTemp = 1;
                     List<EventResponse.Shots> shotsResponse = new ArrayList<>();
                     List<ShotRequest.ShotInfo> shotInfos = new ArrayList<>();
 
-                    for (Shot shot : shots) {
+                    for (int i = 0; i <= shots.size(); i++) {
+                        Shot shot = new Shot();
+                        if (i < shots.size()) {
+                            shot = shots.get(i);
+                        }
+
                         EventResponse.Shots shotsResponseTemp = new EventResponse.Shots();
                         ShotRequest.ShotInfo shotInfo = new ShotRequest.ShotInfo();
+
+                        if (animalNumberTemp != shot.getAnimalNumber()) {
+                            shotsResponseTemp.animalNumber = animalNumberTemp;
+                            shotsResponseTemp.shotInfos = shotInfos;
+                            shotInfos = new ArrayList<>();
+                            shotsResponse.add(shotsResponseTemp);
+                            animalNumberTemp = shot.getAnimalNumber();
+                        }
 
                         shotInfo.shotNumber = shot.getShotNumber();
                         shotInfo.points = shot.getPoints();
                         shotInfos.add(shotInfo);
-
-                        if (animalNumberTemp != shot.getAnimalNumber()) {
-                            shotsResponseTemp.animalNumber = shot.getAnimalNumber();
-                            shotsResponseTemp.shotInfos = shotInfos;
-                            shotsResponse.add(shotsResponseTemp);
-                            animalNumberTemp = shot.getAnimalNumber();
-                        }
                     }
                     memberTemp.shots = shotsResponse;
                 }

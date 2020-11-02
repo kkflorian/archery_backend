@@ -14,9 +14,9 @@ import java.util.List;
 
 public interface EventQuery {
 
-    @SqlQuery("SELECT event.* FROM event JOIN eventMember ON event.id = eventMember.eventId WHERE event.userIdCreator = :userId OR eventMember.userId = :userId GROUP BY eventId")
+    @SqlQuery("SELECT event.* FROM event JOIN eventMember ON event.id = eventMember.eventId WHERE eventMember.userId = :userId GROUP BY eventId")
     @RegisterBeanMapper(Event.class)
-    List<Event> getEventListbyUserId(int userId);
+    List<Event> getEventListByUserId(int userId);
 
     @SqlQuery("SELECT user.* FROM user JOIN eventMember ON user.id = eventMember.userId WHERE eventMember.eventId = :eventId")
     @RegisterBeanMapper(User.class)
