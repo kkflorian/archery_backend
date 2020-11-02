@@ -6,6 +6,7 @@ import property.abolish.archery.Archery;
 import property.abolish.archery.db.model.Event;
 import property.abolish.archery.db.model.User;
 import property.abolish.archery.db.query.EventQuery;
+import property.abolish.archery.db.query.GameModeQuery;
 import property.abolish.archery.db.query.ShotQuery;
 import property.abolish.archery.http.model.responses.ErrorResponse;
 import property.abolish.archery.http.model.responses.EventStatsResponse;
@@ -37,6 +38,11 @@ public class StatsController {
         try (Handle dbConnection = Archery.getConnection()) {
             User user = ctx.use(User.class);
             int gameModeId = ctx.pathParam("gameModeId", Integer.class).get();
+
+            if (!isGameModeValid(gameModeId, dbConnection, ctx)){
+                return;
+            }
+
             ctx.json(dbConnection.attach(ShotQuery.class).getOverallStatsNumbers(user.getId(), gameModeId));
         }
     }
@@ -45,7 +51,20 @@ public class StatsController {
         try (Handle dbConnection = Archery.getConnection()) {
             User user = ctx.use(User.class);
             int gameModeId = ctx.pathParam("gameModeId", Integer.class).get();
+
+            if (!isGameModeValid(gameModeId, dbConnection, ctx)){
+                return;
+            }
+
             ctx.json(new OverallStatsGraphResponse(dbConnection.attach(ShotQuery.class).getOverallStatsGraphEntries(user.getId(), gameModeId)));
         }
+    }
+
+    private static boolean isGameModeValid(int gameModeId, Handle dbConnection, Context ctx) {
+        if (dbConnection.attach(GameModeQuery.class).getGameModeById(gameModeId) == null) {
+            ctx.status(404).json(new ErrorResponse("GAMEMODE_DOES_NOT_EXIST", "The gameMode does not exist"));
+            return false;
+        }
+        return true;
     }
 }

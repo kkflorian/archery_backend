@@ -65,18 +65,18 @@ select sum(points) from shot join event on eventId = event.id where userId = :us
     @RegisterBeanMapper(EventStats.class)
     List<EventStats> getEventStats(int eventId);
 
-    @SqlQuery("select (sum(points) / max(animalNumber)) as graphEntry from shot join event on eventId = event.id where userId = :userId and gamemodeId = :gameModeId group by eventId")
-    List<Integer> getOverallStatsGraphEntries(int userId, int gameModeId);
+    @SqlQuery("select (sum(points) / max(animalNumber)) as graphEntry from shot join event on eventId = event.id where userId = :userId and gamemodeId = :gameModeId and event.timestampEnd is not null group by eventId")
+    List<Double> getOverallStatsGraphEntries(int userId, int gameModeId);
 
-    @SqlQuery("select a.totalHits, b.totalShots, c.totalEvents, d.averageOverall from (select count(*) as totalHits from shot where points > 0 and userId = :userId) a\n" +
-            "join (select count(*) as totalShots from shot where userId = :userId) b\n" +
+    @SqlQuery("select totalHits, totalShots, totalEvents, averageOverall from (select count(*) as totalHits from shot join event on eventId = event.id where points > 0 and userId = :userId and event.timestampEnd is not null and event.gamemodeId = :gameModeId) a\n" +
+            "join (select count(*) as totalShots from shot join event on event.id = eventId where userId = :userId and event.timestampEnd is not null and event.gamemodeId = :gameModeId) b\n" +
             "join (select count(*) as totalEvents from event\n" +
             "            left join eventMember on event.id = eventMember.eventId\n" +
-            "            where userIdCreator = :userId or eventMember.userId = :userId) c\n" +
+            "            where eventMember.userId = :userId and event.timestampEnd is not null and event.gamemodeId = :gameModeId) c\n" +
             "join (select avg(cu.graphEntry) as averageOverall from\n" +
             "                (select (sum(points) / max(animalNumber)) as graphEntry from shot sh\n" +
             "                        join event ev on sh.eventId = ev.id\n" +
-            "                        where sh.userId = :userId and ev.gamemodeId = :gameModeId\n" +
+            "                        where sh.userId = :userId and ev.gamemodeId = :gameModeId and ev.timestampEnd is not null\n" +
             "                        group by sh.eventId) cu) d")
     @RegisterBeanMapper(OverallStatsNumbersResponse.class)
     OverallStatsNumbersResponse getOverallStatsNumbers(int userId, int gameModeId);
