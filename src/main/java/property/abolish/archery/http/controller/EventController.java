@@ -75,18 +75,13 @@ public class EventController {
     }
 
     public static void handleCreateEvent(Context ctx) {
-        Validator<EventRequest> validator = ctx.bodyValidator(EventRequest.class)
+        EventRequest req = ctx.bodyValidator(EventRequest.class)
                 .check(r -> r.parkourId != 0, "parkourId cannot be zero")
-                .check(r -> r.gameModeId != 0, "gamemodeId cannot be zero");
-        if (validator.hasError()) {
-            Validation.handleValidationError(ctx, validator);
-            return;
-        }
+                .check(r -> r.gameModeId != 0, "gamemodeId cannot be zero")
+                .get();
 
         try (Handle dbConnection = Archery.getConnection()) {
-            EventRequest req = validator.get();
             Event event = new Event();
-
             event.setGamemodeId(req.gameModeId);
             event.setParkourId(req.parkourId);
             event.setTimestamp(Instant.now());

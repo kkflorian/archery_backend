@@ -41,15 +41,10 @@ public class UserController {
     public static final String COOKIE_NAME_SESSION = "Session";
 
     public static void handleLogin(Context ctx) {
-        Validator<LoginRequest> validator = ctx.bodyValidator(LoginRequest.class)
+        LoginRequest req = ctx.bodyValidator(LoginRequest.class)
                 .check(r -> !Validation.isNullOrEmpty(r.username), "username cannot be null or empty")
-                .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty");
-        if (validator.hasError()) {
-            Validation.handleValidationError(ctx, validator);
-            return;
-        }
-
-        LoginRequest req = validator.get();
+                .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty")
+                .get();
 
         try (Handle dbConnection = Archery.getConnection()) {
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
@@ -92,7 +87,7 @@ public class UserController {
     }
 
     public static void handleRegister(Context ctx) {
-        Validator<RegisterRequest> validator = ctx.bodyValidator(RegisterRequest.class)
+        RegisterRequest req = ctx.bodyValidator(RegisterRequest.class)
                 .check(r -> !Validation.isNullOrEmpty(r.firstName), "firstName cannot be null or empty")
                 .check(r -> r.username.length() >= 3 && r.username.length() <= 20, "username must be to between 3 and 20 characters")
                 .check(r -> r.username.matches("^[A-Za-z0-9_]{3,20}$"), "username must be alphanumeric")
@@ -100,13 +95,9 @@ public class UserController {
                 .check(r -> !Validation.isNullOrEmpty(r.username), "username cannot be null or empty")
                 .check(r -> !Validation.isNullOrEmpty(r.password), "password cannot be null or empty")
                 .check(r -> r.password.length() >= 8, "password must be 8 or more characters")
-                .check(r -> countCharTypes(r.password) > 1, "password must contain at least two different character types");
-        if (validator.hasError()) {
-            Validation.handleValidationError(ctx, validator);
-            return;
-        }
+                .check(r -> countCharTypes(r.password) > 1, "password must contain at least two different character types")
+                .get();
 
-        RegisterRequest req = validator.get();
         try (Handle dbConnection = Archery.getConnection()) {
             // Check if user with this username already exists
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
@@ -162,16 +153,12 @@ public class UserController {
     }
 
     public static void handleGetUsersBySearchTerm(Context ctx) {
-        Validator<GetUsersRequest> validator = ctx.bodyValidator(GetUsersRequest.class)
+        GetUsersRequest req = ctx.bodyValidator(GetUsersRequest.class)
                 .check(r -> r.searchTerm != null, "searchTerm cannot be null")
-                .check(r -> r.limit != 0, "limit cannot be zero");
-        if (validator.hasError()) {
-            Validation.handleValidationError(ctx, validator);
-            return;
-        }
+                .check(r -> r.limit != 0, "limit cannot be zero")
+                .get();
 
         try (Handle dbConnection = Archery.getConnection()){
-            GetUsersRequest req = validator.get();
             UserQuery userQuery = dbConnection.attach(UserQuery.class);
             User user = ctx.use(User.class);
 

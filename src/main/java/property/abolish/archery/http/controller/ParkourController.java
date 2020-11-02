@@ -22,23 +22,17 @@ import java.net.URLEncoder;
 
 public class ParkourController {
     public static void handleCreateParkour(Context ctx) {
-        Validator<ParkourRequest> validator = ctx.bodyValidator(ParkourRequest.class)
+        ParkourRequest req = ctx.bodyValidator(ParkourRequest.class)
                 .check(r -> !Validation.isNullOrEmpty(r.name), "name cannot be null or empty")
                 .check(r -> !(r.countAnimals == 0), "countAnimals cannot be zero")
                 .check(r -> !Validation.isNullOrEmpty(r.countryCode), "countryCode cannot be null or empty")
                 .check(r -> !Validation.isNullOrEmpty(r.city), "city cannot be null or empty")
                 .check(r -> !Validation.isNullOrEmpty(r.street), "street cannot be null or empty")
-                .check(r -> !Validation.isNullOrEmpty(r.zip), "zip cannot be null or empty");
-
-        if (validator.hasError()) {
-            Validation.handleValidationError(ctx, validator);
-            return;
-        }
+                .check(r -> !Validation.isNullOrEmpty(r.zip), "zip cannot be null or empty")
+                .get();
 
         try (Handle dbConnection = Archery.getConnection()) {
-            ParkourRequest req = validator.get();
             Parkour parkour = new Parkour();
-
             parkour.setCountAnimals(req.countAnimals);
             parkour.setCity(req.city);
             parkour.setCountryCode(req.countryCode);
