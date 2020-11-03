@@ -58,7 +58,7 @@ public class ParkourController {
             JsonArray locations = (JsonArray)OSM.httpGetAsJson(urlBuilder.toString());
 
             if (!isLocationValid(locations) && !req.ignoreCoordinates) {
-                ctx.json(new ErrorResponse("ADDRESS_NOT_FOUND", "The coordinates for this address were not found"));
+                ctx.json(new ErrorResponse("ADDRESS_NOT_FOUND", "Koordinaten für diese Adresse wurde nicht gefunden"));
                 return;
             }
 

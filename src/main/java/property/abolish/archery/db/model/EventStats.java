@@ -6,7 +6,7 @@ public class EventStats {
     private String lastName;
     private double averagePoints;
     private int totalPoints;
-    private int shotsTotal;
+    private int totalShots;
     private double accuracy;
 
     public double getAveragePoints() {
@@ -25,12 +25,12 @@ public class EventStats {
         this.totalPoints = totalPoints;
     }
 
-    public int getShotsTotal() {
-        return shotsTotal;
+    public int getTotalShots() {
+        return totalShots;
     }
 
-    public void setShotsTotal(int shotsTotal) {
-        this.shotsTotal = shotsTotal;
+    public void setTotalShots(int totalShots) {
+        this.totalShots = totalShots;
     }
 
     public double getAccuracy() {
