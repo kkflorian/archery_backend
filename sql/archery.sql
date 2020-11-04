@@ -156,3 +156,6 @@ CREATE INDEX `userSession_user_idx` ON `userSession` (`userId` ASC) ;
 
 alter table event add column timestampEnd timestamp null;
 alter table shot modify column id int NOT NULL AUTO_INCREMENT;
+
+insert into gamemode (id, gamemode) values (1, 'Dreipfeilwertung');
+insert into gamemode (id, gamemode) values (2, 'Zweipfeilwertung');
