@@ -29,8 +29,8 @@ public interface ShotQuery {
 
     @SqlQuery("select user.username, user.firstName, user.lastName, totalShots, hitShots / totalShots as accuracy, c.averagePoints, c.totalPoints\n" +
             "            from (select userid, count(*) as totalShots from shot join event on event.id = eventId where eventId = :eventId and event.timestampEnd is not null group by userid) a\n" +
-            "            join (select userid, count(*) as hitShots from shot join event on event.id = eventId where points != 0 and eventId = :eventId and event.timestampEnd is not null group by userid) b on a.userId = b.userId\n" +
-            "            join (select userid, avg(e.totalPoints) as averagePoints, sum(e.totalPoints) as totalPoints\n" +
+            "            left join (select userid, count(*) as hitShots from shot join event on event.id = eventId where points != 0 and eventId = :eventId and event.timestampEnd is not null group by userid) b on a.userId = b.userId\n" +
+            "            left join (select userid, avg(e.totalPoints) as averagePoints, sum(e.totalPoints) as totalPoints\n" +
             "                        from (select d.userid, sum(d.points) as totalPoints\n" +
             "                               from shot d join event on event.id = d.eventId where d.eventId = :eventId and event.timestampEnd is not null group by d.userid, d.animalNumber) e group by e.userid) c on b.userId = c.userId\n" +
             "            join user on a.userId = user.id")
