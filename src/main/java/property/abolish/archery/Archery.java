@@ -1,7 +1,6 @@
 package property.abolish.archery;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.javalin.Javalin;
 import io.javalin.core.security.Role;
 import io.javalin.http.BadRequestResponse;
@@ -58,7 +57,10 @@ public class Archery {
             System.out.println("Connection successfully established!");
 
             Javalin httpServer = Javalin.create(config -> {
-                config.enableCorsForOrigin(Archery.config.devModeURL);
+                if (Archery.config.devModeURL != null) {
+                    config.enableCorsForOrigin(Archery.config.devModeURL);
+                }
+
                 config.accessManager((handler, ctx, permittedRoles) -> {
                     if (ctx.method().equals("OPTIONS")) {
                         handler.handle(ctx);
